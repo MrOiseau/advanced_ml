@@ -1,0 +1,18 @@
+chromadb==0.5.3
+flashrank==0.2.9
+openai==1.40.1
+python-dotenv==1.0.1
+langchain==0.2.16
+# langchainhub==0.1.21
+# langchain-community==0.2.11
+# langchain-chroma==0.1.2
+# langchain-core==0.2.28
+# langchain-openai==0.1.20
+# langchain-text-splitters==0.2.2
+langsmith==0.1.114
+openpyxl==3.1.5
+pandas==2.2.2
+pypdf==4.3.1
+python-dotenv==1.0.1
+streamlit==1.38.0
+streamlit_feedback==0.1.3
