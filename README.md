@@ -11,7 +11,6 @@ This project implements an AI-powered document retrieval system using Python, La
 - Query expansion for improved search results
 - Document reranking with FlashrankRerank
 - Summarization of retrieved information
-- User feedback collection using LangSmith
 - Streamlit-based web interface
 
 ## Components
@@ -20,7 +19,7 @@ This project implements an AI-powered document retrieval system using Python, La
 
 1. `indexing.py`: Handles document ingestion, processing, and indexing.
 2. `querying.py`: Manages query processing, document retrieval, and summarization.
-3. `utils.py`: Contains utility functions, including logging setup.
+3. `utils.py`: Contains utility functions, including logging setup and function for remove duplicates from generated evaluation dataset
 
 ### Frontend
 
@@ -76,7 +75,7 @@ This project implements an AI-powered document retrieval system using Python, La
 The system is evaluated using a variety of metrics that assess the quality of retrieved documents and generated answers. The evaluation is performed on a dataset of questions related to the documents, stored in data/evaluation_dataset.json.
 
 ### Metrics Used
-The metrics in the provided RAGEvaluator class are well-defined, and they calculate typical NLP evaluation scores such as precision, recall, F1, BLEU, ROUGE, and semantic similarity. However, the accuracy of these metrics depends on whether they are applied correctly in context.
+The metrics in the provided RAGEvaluator class are well-defined, and they calculate typical NLP evaluation scores such as precision, recall, F1, BLEU, ROUGE, and semantic similarity.
 
 Here's a review of the metrics and their accurate implementation:
 
@@ -127,7 +126,7 @@ An example of the evaluation for the question: "What is the purpose of multi-hea
 
 The image below shows the average of each evaluation metric across all questions in the dataset:
 
-(**Note**, dataset was not created properly, need to fix it)
+(**Note**, dataset was not created properly, "context" is not exactly cut text from PDFs, need to fix it)
 
 ![results_evaluation_average_metrics.png](data/evaluation/results_evaluation_average_metrics.png)
 
