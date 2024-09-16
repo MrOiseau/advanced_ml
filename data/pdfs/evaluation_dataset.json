@@ -1,0 +1,802 @@
+[
+    {
+        "id": 1,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 2,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 3,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 4,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 5,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 6,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 7,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 8,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 9,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 10,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 11,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 12,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 13,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 14,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 15,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 16,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 17,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 18,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 19,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 20,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 21,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 22,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 23,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 24,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 25,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 26,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 27,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 28,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 29,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 30,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 31,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 32,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 33,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 34,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 35,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 36,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 37,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 38,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 39,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 40,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 41,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 42,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 43,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 44,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 45,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 46,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 47,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 48,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 49,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 50,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 51,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 52,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 53,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 54,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 55,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 56,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 57,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 58,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 59,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 60,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 61,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 62,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 63,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 64,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 65,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 66,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 67,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 68,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 69,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 70,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 71,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 72,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 73,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 74,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 75,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 76,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 77,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 78,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 79,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 80,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 81,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 82,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 83,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 84,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 85,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 86,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 87,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 88,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 89,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 90,
+        "question": "What is the main goal of the 'Rewrite-Retrieve-Read' framework?",
+        "context": [
+            "The main focus of the 'Rewrite-Retrieve-Read' framework is query rewriting to bridge the gap between input text and knowledge needed for retrieval."
+        ],
+        "answer": "The main goal is to focus on query rewriting to improve retrieval-augmented LLM performance."
+    },
+    {
+        "id": 91,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 92,
+        "question": "How does the transformer attention mechanism work?",
+        "context": [
+            "In the transformer architecture, the attention mechanism allows each input token to attend to every other token in the sequence, enhancing translation quality."
+        ],
+        "answer": "It allows each input token to attend to every other token in the sequence."
+    },
+    {
+        "id": 93,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 94,
+        "question": "What does the BERT model use to generate contextual embeddings?",
+        "context": [
+            "The BERT model uses a transformer encoder to generate contextual embeddings for sentences, which can then be used for various NLP tasks like classification and question answering."
+        ],
+        "answer": "The BERT model uses a transformer encoder."
+    },
+    {
+        "id": 95,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 96,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 97,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 98,
+        "question": "What is the purpose of multi-head attention in transformers?",
+        "context": [
+            "Multi-head attention in transformers allows for the joint attention to information from different representation subspaces at different positions in the sequence."
+        ],
+        "answer": "It allows joint attention to information from different representation subspaces."
+    },
+    {
+        "id": 99,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    },
+    {
+        "id": 100,
+        "question": "How does query rewriting improve LLM performance?",
+        "context": [
+            "The query rewriting step enhances retrieval-augmented LLM performance by improving the relevance of retrieved contexts for downstream tasks."
+        ],
+        "answer": "By improving the relevance of retrieved contexts for downstream tasks."
+    }
+]

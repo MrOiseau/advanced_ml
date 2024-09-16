@@ -7,7 +7,8 @@ import uuid
 from streamlit_feedback import streamlit_feedback
 from backend.querying import QueryPipeline
 from langsmith import Client
-from langchain.callbacks import tracing_v2_enabled  # Import tracing_v2_enabled
+from langchain.callbacks import tracing_v2_enabled
+from backend.utils import setup_logging
 
 # Load environment variables
 load_dotenv()
@@ -15,9 +16,12 @@ load_dotenv()
 # Set Streamlit page configuration at the very beginning
 st.set_page_config(page_title="AI Document Retrieval", layout="wide")
 
-# Initialize the logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Load environment variables from .env file
+load_dotenv()
+
+# Configure logging
+logger = setup_logging(__name__)
+
 
 # Environment Variables with Validation
 DB_DIR = os.getenv("DB_DIR")
@@ -61,8 +65,18 @@ SCORE_MAPPINGS = {
 # Feedback settings
 score_mappings = SCORE_MAPPINGS[FEEDBACK_OPTION]
 
-def _submit_feedback(feedback_data, run_id, **kwargs):
-    """Handle feedback submission to LangSmith."""
+def _submit_feedback(feedback_data: dict, run_id: str, **kwargs) -> None:
+    """
+    Submit user feedback to LangSmith.
+
+    Args:
+        feedback_data (dict): Feedback data containing user inputs.
+        run_id (str): ID of the query run.
+        **kwargs: Additional metadata to include in the feedback.
+
+    Returns:
+        None
+    """
     try:
         if not run_id:
             logger.error("No run_id provided. Cannot submit feedback.")
@@ -84,7 +98,7 @@ def _submit_feedback(feedback_data, run_id, **kwargs):
             run_id=run_id,
             key=feedback_type_str,
             score=score,
-            comment=str(comment),  # Convert comment dict to string
+            comment=str(comment),
         )
         st.session_state["feedback"] = {
             "feedback_id": str(feedback_record.id),
@@ -97,22 +111,33 @@ def _submit_feedback(feedback_data, run_id, **kwargs):
         st.error(f"Failed to submit feedback: {e}")
         logger.error(f"Feedback submission error: {e}")
 
-def handle_feedback(tag, run_id, **kwargs):
-    """
-    Display feedback component and handle user input.
-    """
-    feedback_key = f"feedback_{tag}"
-    feedback = streamlit_feedback(
-        feedback_type=FEEDBACK_OPTION,
-        optional_text_label="[Optional] Please provide an explanation",
-        key=feedback_key,
-        on_submit=lambda feedback: _submit_feedback(feedback, run_id, tag=tag, **kwargs),
-    )
+# def handle_feedback(tag: str, run_id: str, **kwargs) -> None:
+#     """
+#     Display the feedback component and handle user input.
+
+#     Args:
+#         tag (str): A tag to identify the feedback.
+#         run_id (str): ID of the query run.
+#         **kwargs: Additional metadata for the feedback.
+
+#     Returns:
+#         None
+#     """
+#     feedback_key = f"feedback_{tag}"
+#     feedback = streamlit_feedback(
+#         feedback_type=FEEDBACK_OPTION,
+#         optional_text_label="[Optional] Please provide an explanation",
+#         key=feedback_key,
+#         on_submit=lambda feedback: _submit_feedback(feedback, run_id, tag=tag, **kwargs),
+#     )
 
 @st.cache_resource
-def initialize_query_pipeline():
+def initialize_query_pipeline() -> QueryPipeline:
     """
     Initialize the QueryPipeline and cache it to avoid redundant setups.
+
+    Returns:
+        QueryPipeline: An initialized instance of QueryPipeline.
     """
     try:
         pipeline = QueryPipeline(
@@ -124,7 +149,7 @@ def initialize_query_pipeline():
             search_results_num=SEARCH_RESULTS_NUM,
             langsmith_project=LANGSMITH_PROJECT,
             query_expansion=True,  # Enable if desired
-            rerank=True,          # Enable if desired
+            rerank=True,           # Enable if desired
         )
         logger.info("QueryPipeline initialized successfully.")
         return pipeline
@@ -200,7 +225,7 @@ if submit_button and user_input.strip():
             st.subheader("📚 Summary of Retrieved Information")
             summary = query_pipeline.generate_summary(user_input, result.get("documents", ""))
             st.write(summary)
-            handle_feedback(tag="rag_summary", run_id=run_id, query=user_input)
+            # handle_feedback(tag="rag_summary", run_id=run_id, query=user_input)
 
         with documents_tab:
             st.subheader("📄 Retrieved Documents")
@@ -212,7 +237,7 @@ if submit_button and user_input.strip():
                         st.markdown(f"**Document {idx}**")
                         st.write(doc)
                         # Use the same run_id for all documents, but differentiate with metadata
-                        handle_feedback(tag=f"search_{idx-1}", run_id=run_id, query=user_input, doc_index=idx)
+                        # handle_feedback(tag=f"search_{idx-1}", run_id=run_id, query=user_input, doc_index=idx)
                         st.markdown("---")  # Add a separator between documents
             else:
                 st.write("No documents retrieved.")

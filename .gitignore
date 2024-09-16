@@ -163,9 +163,20 @@ cython_debug/
 
 
 # .gitignore
+.DS_Store
 .env
 __pycache__/
 *.pyc
 .venv/
 run_indexing.py
-data/
+
+
+db/
+data/evaluation/evaluation_dataset_100.json
+data/evaluation/evaluation_dataset_chatgpt_unique.json
+data/evaluation/evaluation_dataset_chatgpt.json
+
+
+backend/pdf_question_answer_generator.py
+.gitignore
+requirements_.txt
