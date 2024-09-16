@@ -29,6 +29,7 @@ This project implements an AI-powered document retrieval system using Python, La
 
 - `query_expansion.jinja2`: Template for query expansion.
 - `summarize.jinja2`: Template for generating summaries.
+- `generate_evaluation_set.jinja2`: Template for pasting to GPT-4o together with PDF document. Purpose is to create evaluation test set.
 
 ## Setup
 

@@ -1,0 +1,242 @@
+[
+    {
+        "id": 11,
+        "question": "What issue does the Rewrite-Retrieve-Read pipeline aim to address?",
+        "context": [
+            "In consideration of this issue, this paper proposes Rewrite-Retrieve-Read, a new framework for retrieval augmentation, which can be further tuned for adapting to LLMs. In front of the retriever, a step of rewriting the input is added, filling the gap between the given input and retrieval need."
+        ],
+        "answer": "The Rewrite-Retrieve-Read pipeline addresses the gap between the given input and retrieval needs by adding a query rewriting step."
+    },
+    {
+        "id": 12,
+        "question": "What is the role of the rewriter in the Rewrite-Retrieve-Read pipeline?",
+        "context": [
+            "We also propose a trainable scheme for our rewrite-retrieve-read framework. The black-box retriever and the reader form a frozen system. To further smooth the steps of our pipeline, we apply a small, trainable language model to perform the rewriting step, denoted as the rewriter."
+        ],
+        "answer": "The rewriter is a small, trainable language model that performs the rewriting step to align the retrieval query for the reader."
+    },
+    {
+        "id": 13,
+        "question": "How does the retrieval-augmented LLM approach improve factuality in LLMs?",
+        "context": [
+            "Language models require external knowledge to alleviate factuality drawbacks. Retrieval augmentation has been regarded as the standard effective solution. With a retrieval module, related passages are provided to the language model as the context of the original input."
+        ],
+        "answer": "Retrieval-augmented LLMs improve factuality by incorporating external knowledge in the form of related passages, which help provide a factual context for predictions."
+    },
+    {
+        "id": 14,
+        "question": "What evaluation tasks were used to test the Rewrite-Retrieve-Read framework?",
+        "context": [
+            "Our proposed methods are evaluated on knowledge-intensive downstream tasks including open-domain QA (HotpoQA, AmbigNQ, PopQA) and multiple choice QA (MMLU)."
+        ],
+        "answer": "The Rewrite-Retrieve-Read framework was evaluated using tasks like open-domain QA (HotpoQA, AmbigNQ, PopQA) and multiple choice QA (MMLU)."
+    },
+    {
+        "id": 15,
+        "question": "What is the significance of the reinforcement learning step in the Rewrite-Retrieve-Read pipeline?",
+        "context": [
+            "The rewriter is trained by reinforcement learning using the LLM performance as a reward, learning to adapt the retrieval query to improve the reader on downstream tasks."
+        ],
+        "answer": "The reinforcement learning step is significant because it adapts the rewriter based on LLM performance, improving the retrieval query and ultimately enhancing the reader's performance on downstream tasks."
+    },
+    {
+        "id": 16,
+        "question": "Why are large language models (LLMs) typically considered black-box systems?",
+        "context": [
+            "Large Language Models, such as ChatGPT, Codex, and PaLM, emerge with impressive natural language processing abilities and scalability. However, LLMs are only accessible as a black box in most cases because they are not open-source, and their large parameter scale requires unaffordable computational resources for many users."
+        ],
+        "answer": "LLMs are considered black-box systems because they are not open-source and require large computational resources, making them inaccessible for most users beyond input and output interactions."
+    },
+    {
+        "id": 17,
+        "question": "What is one limitation of the Rewrite-Retrieve-Read framework mentioned in the document?",
+        "context": [
+            "We acknowledge the limitations of this work. There is still a trade-off between generalization and specialization among downstream tasks. Adding a training process compromises scalability compared to few-shot in-context learning."
+        ],
+        "answer": "One limitation of the Rewrite-Retrieve-Read framework is the trade-off between generalization and specialization, which affects scalability compared to few-shot in-context learning."
+    },
+    {
+        "id": 18,
+        "question": "What is the motivation behind introducing the rewrite step before retrieval?",
+        "context": [
+            "The motivation of our rewriting step is to clarify the retrieval need from the input text. This is important to ensure that the retrieval step aligns with the specific information required by the input."
+        ],
+        "answer": "The motivation behind the rewrite step is to clarify the retrieval need from the input text, ensuring that the retrieval step is more aligned with the specific information requirements."
+    },
+    {
+        "id": 19,
+        "question": "How is the rewriter model initialized in the proposed pipeline?",
+        "context": [
+            "Based on our framework, we further propose to utilize a trainable small language model to take over the rewriting step. The trainable model is initialized with the pre-trained T5-large (770M)."
+        ],
+        "answer": "The rewriter model is initialized with a pre-trained T5-large model (770M)."
+    },
+    {
+        "id": 20,
+        "question": "What advantage does a web search engine offer as a retriever in the Rewrite-Retrieve-Read framework?",
+        "context": [
+            "We adopt the off-the-shelf tool, an internet search engine, as the retriever, which avoids the maintenance of the search index and can access up-to-date knowledge."
+        ],
+        "answer": "A web search engine as a retriever offers the advantage of avoiding the maintenance of a search index and accessing up-to-date knowledge."
+    },
+    {
+        "id": 21,
+        "question": "What are the dominant sequence transduction models discussed in the paper?",
+        "context": [
+            "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism."
+        ],
+        "answer": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder, often with an attention mechanism."
+    },
+    {
+        "id": 22,
+        "question": "What is the main advantage of the Transformer model compared to recurrent models?",
+        "context": [
+            "In this work, we propose the Transformer, a model architecture eschewing recurrence and instead relying entirely on an attention mechanism to draw global dependencies between input and output. The Transformer allows for significantly more parallelization and can reach a new state of the art in translation quality after being trained for as little as twelve hours on eight P100 GPUs."
+        ],
+        "answer": "The main advantage of the Transformer is that it allows for significantly more parallelization and achieves better performance in less training time compared to recurrent models."
+    },
+    {
+        "id": 23,
+        "question": "What are self-attention mechanisms, and how are they applied in sequence modeling?",
+        "context": [
+            "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence to compute a representation of the sequence. Self-attention has been used successfully in tasks including reading comprehension, abstractive summarization, textual entailment, and learning task-independent sentence representations."
+        ],
+        "answer": "Self-attention mechanisms relate different positions of a single sequence to compute its representation, and they are applied in tasks such as reading comprehension and abstractive summarization."
+    },
+    {
+        "id": 24,
+        "question": "What is the encoder in the Transformer model composed of?",
+        "context": [
+            "The encoder is composed of a stack of N = 6 identical layers. Each layer has two sub-layers. The first is a multi-head self-attention mechanism, and the second is a simple, position-wise fully connected feed-forward network."
+        ],
+        "answer": "The encoder in the Transformer model is composed of six identical layers, each with two sub-layers: a multi-head self-attention mechanism and a feed-forward network."
+    },
+    {
+        "id": 25,
+        "question": "How does the Transformer handle positional information in sequences?",
+        "context": [
+            "Since our model contains no recurrence and no convolution, in order for the model to make use of the order of the sequence, we must inject some information about the relative or absolute position of the tokens in the sequence. To this end, we add 'positional encodings' to the input embeddings at the bottoms of the encoder and decoder stacks."
+        ],
+        "answer": "The Transformer uses 'positional encodings' added to input embeddings to capture the relative or absolute position of tokens in a sequence."
+    },
+    {
+        "id": 26,
+        "question": "What are the three main uses of multi-head attention in the Transformer?",
+        "context": [
+            "The Transformer uses multi-head attention in three different ways: (1) In 'encoder-decoder attention' layers, the queries come from the previous decoder layer, and the memory keys and values come from the output of the encoder. (2) The encoder contains self-attention layers. (3) Self-attention layers in the decoder allow each position in the decoder to attend to all positions in the decoder up to and including that position."
+        ],
+        "answer": "Multi-head attention is used for encoder-decoder attention, self-attention in the encoder, and self-attention in the decoder."
+    },
+    {
+        "id": 27,
+        "question": "What does the paper suggest about the relationship between self-attention and sequence length?",
+        "context": [
+            "A self-attention layer connects all positions with a constant number of sequentially executed operations, whereas a recurrent layer requires O(n) sequential operations. In terms of computational complexity, self-attention layers are faster than recurrent layers when the sequence length n is smaller than the representation dimensionality d."
+        ],
+        "answer": "Self-attention layers are computationally more efficient than recurrent layers when the sequence length is smaller than the representation dimensionality."
+    },
+    {
+        "id": 28,
+        "question": "What regularization techniques are applied during Transformer training?",
+        "context": [
+            "We employ three types of regularization during training: (1) residual dropout, (2) label smoothing, and (3) regularization of the sums of embeddings and positional encodings."
+        ],
+        "answer": "The regularization techniques used in Transformer training include residual dropout, label smoothing, and regularization of the sums of embeddings and positional encodings."
+    },
+    {
+        "id": 29,
+        "question": "How does the Transformer perform on the WMT 2014 English-to-German translation task?",
+        "context": [
+            "On the WMT 2014 English-to-German translation task, the big transformer model outperforms the best previously reported models (including ensembles) by more than 2.0 BLEU, establishing a new state-of-the-art BLEU score of 28.4."
+        ],
+        "answer": "The Transformer achieved a state-of-the-art BLEU score of 28.4 on the WMT 2014 English-to-German translation task."
+    },
+    {
+        "id": 30,
+        "question": "What kind of hardware setup was used to train the Transformer model?",
+        "context": [
+            "We trained our models on one machine with 8 NVIDIA P100 GPUs. For our base models using the hyperparameters described throughout the paper, each training step took about 0.4 seconds."
+        ],
+        "answer": "The Transformer model was trained on a machine with 8 NVIDIA P100 GPUs."
+    },
+    {
+        "id": 31,
+        "question": "What is the primary purpose of BERT?",
+        "context": [
+            "We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models (Peters et al., 2018a; Radford et al., 2018), BERT is designed to pretrain deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers. As a result, the pre-trained BERT model can be fine-tuned with just one additional output layer to create state-of-the-art models for a wide range of tasks, such as question answering and language inference, without substantial task-specific architecture modifications."
+        ],
+        "answer": "The primary purpose of BERT is to pretrain deep bidirectional representations from unlabeled text, allowing fine-tuning for various downstream tasks such as question answering and language inference."
+    },
+    {
+        "id": 32,
+        "question": "What differentiates BERT from previous models like OpenAI GPT?",
+        "context": [
+            "BERTBASE was chosen to have the same model size as OpenAI GPT for comparison purposes. Critically, however, the BERT Transformer uses bidirectional self-attention, while the GPT Transformer uses constrained self-attention where every token can only attend to context to its left."
+        ],
+        "answer": "BERT differentiates from OpenAI GPT by using bidirectional self-attention, whereas GPT employs constrained self-attention, only attending to the left context."
+    },
+    {
+        "id": 33,
+        "question": "What is the significance of the Masked Language Model (MLM) in BERT?",
+        "context": [
+            "BERT alleviates the unidirectionality constraint by using a 'masked language model' (MLM) pre-training objective, inspired by the Cloze task (Taylor, 1953). The masked language model randomly masks some of the tokens from the input, and the objective is to predict the original vocabulary id of the masked word based only on its context."
+        ],
+        "answer": "The Masked Language Model (MLM) is significant because it allows BERT to overcome the unidirectionality constraint by predicting masked tokens based on both left and right context."
+    },
+    {
+        "id": 34,
+        "question": "How does BERT handle input for a variety of downstream tasks?",
+        "context": [
+            "Input/Output Representations: To make BERT handle a variety of downstream tasks, our input representation is able to unambiguously represent both a single sentence and a pair of sentences in one token sequence. Throughout this work, a 'sentence' can be an arbitrary span of contiguous text, rather than an actual linguistic sentence."
+        ],
+        "answer": "BERT handles a variety of downstream tasks by using input representations that can unambiguously represent both a single sentence and a pair of sentences in one token sequence."
+    },
+    {
+        "id": 35,
+        "question": "What is the architecture of BERTBASE?",
+        "context": [
+            "We primarily report results on two model sizes: BERTBASE (L=12, H=768, A=12, Total Parameters=110M) and BERTLARGE (L=24, H=1024, A=16, Total Parameters=340M)."
+        ],
+        "answer": "The architecture of BERTBASE consists of 12 layers (L=12), a hidden size of 768, 12 attention heads (A=12), and a total of 110 million parameters."
+    },
+    {
+        "id": 36,
+        "question": "What tasks does BERT's pre-training include?",
+        "context": [
+            "Unlike Peters et al. (2018a) and Radford et al. (2018), we do not use traditional left-to-right or right-to-left language models to pre-train BERT. Instead, we pre-train BERT using two unsupervised tasks, described in this section. Task #1: Masked LM, Task #2: Next Sentence Prediction (NSP)."
+        ],
+        "answer": "BERT's pre-training includes two unsupervised tasks: Masked Language Model (MLM) and Next Sentence Prediction (NSP)."
+    },
+    {
+        "id": 37,
+        "question": "What is the Next Sentence Prediction (NSP) task in BERT?",
+        "context": [
+            "In order to train a model that understands sentence relationships, we pre-train for a binarized next sentence prediction task. Specifically, when choosing the sentences A and B for each pre-training example, 50% of the time B is the actual next sentence that follows A, and 50% of the time it is a random sentence from the corpus."
+        ],
+        "answer": "The Next Sentence Prediction (NSP) task pre-trains BERT to predict whether a second sentence B follows a first sentence A, or whether B is a random sentence from the corpus."
+    },
+    {
+        "id": 38,
+        "question": "Why is bidirectional pre-training important for BERT?",
+        "context": [
+            "We demonstrate the importance of bidirectional pre-training for language representations. Unlike Radford et al. (2018), which uses unidirectional language models for pre-training, BERT uses masked language models to enable pre-trained deep bidirectional representations."
+        ],
+        "answer": "Bidirectional pre-training is important for BERT because it allows the model to incorporate context from both the left and right, enhancing its representation power compared to unidirectional models."
+    },
+    {
+        "id": 39,
+        "question": "How does BERT advance the state of the art for NLP tasks?",
+        "context": [
+            "BERT advances the state of the art for eleven NLP tasks. The code and pre-trained models are available at https://github.com/google-research/bert."
+        ],
+        "answer": "BERT advances the state of the art for eleven NLP tasks, offering new benchmarks for performance and providing open-source pre-trained models."
+    },
+    {
+        "id": 40,
+        "question": "What resources were used to pre-train BERT?",
+        "context": [
+            "For the pre-training corpus we use the BooksCorpus (800M words) and English Wikipedia (2,500M words). For Wikipedia we extract only the text passages and ignore lists, tables, and headers."
+        ],
+        "answer": "BERT was pre-trained using the BooksCorpus (800M words) and English Wikipedia (2,500M words), focusing on text passages while ignoring lists, tables, and headers."
+    }
+]

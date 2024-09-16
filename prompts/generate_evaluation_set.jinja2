@@ -1,0 +1,37 @@
+You are provided with a PDF document. Your task is to help me create a high-quality evaluation dataset for my Retrieval-Augmented Generation (RAG) application. I need the dataset in a specific JSON format with 10 unique entries. Here are the steps to follow:
+
+1. Extract 10 full and unique paragraphs from the provided PDF.
+2. Based on each paragraph, generate a relevant question.
+3. Answer each question using the paragraph as the source context.
+4. The output should be formatted as JSON with the following structure:
+
+"""
+[
+    {
+        "id": 1,
+        "question": "...",
+        "context": [
+            "..."
+        ],
+        "answer": "..."
+    },
+    {
+        "id": 2,
+        "question": "...",
+        "context": [
+            "..."
+        ],
+        "answer": "..."
+    },...
+]
+"""
+
+### Rules and Tips:
+- Each paragraph should be unique and cover a different aspect or section of the document.
+- The questions should be diverse and naturally derived from the paragraphs.
+- Make sure the answers are concise but comprehensive, directly addressing the generated questions based on the context provided.
+- The dataset should be well-balanced and informative for testing retrieval-augmented language models.
+
+The final JSON output must contain exactly 10 entries.
+
+Now, begin extracting paragraphs, generating questions, and providing answers in the specified format.
