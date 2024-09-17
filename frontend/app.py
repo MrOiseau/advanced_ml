@@ -47,7 +47,7 @@ required_vars = [
     "CHAT_MODEL",
     "LANGSMITH_PROJECT",
     "OPENAI_API_KEY",
-    "LANGCHAIN_API_KEY",
+    "LANGSMITH_API_KEY",
 ]
 missing_vars = [var for var in required_vars if not os.getenv(var)]
 if missing_vars:
