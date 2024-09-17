@@ -1,6 +1,5 @@
 import json
 from typing import List, Dict, Any
-from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from rouge import Rouge
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
@@ -9,7 +8,7 @@ from sentence_transformers import SentenceTransformer
 import asyncio
 import matplotlib.pyplot as plt
 
-from backend.querying import QueryPipeline
+from backend.querying_17_09_24 import QueryPipeline
 
 
 class RAGEvaluator:

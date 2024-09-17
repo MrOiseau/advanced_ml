@@ -175,4 +175,5 @@ db/
 
 backend/pdf_question_answer_generator.py
 app_with_feedback.py
+backend/querying_17_09_24.py
 requirements_.txt

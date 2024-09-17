@@ -6,19 +6,14 @@ from typing import Dict, List, Optional, Any
 
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader
-from langchain import callbacks, chat_models, hub, prompts
+from langchain import prompts
 from langchain.output_parsers import PydanticToolsParser
-from langchain.prompts import ChatPromptTemplate, PromptTemplate
-from langchain.retrievers import ContextualCompressionRetriever, MergerRetriever
-from langchain.retrievers.document_compressors import FlashrankRerank, LLMChainFilter
-from langchain.schema import Document, StrOutputParser
+from langchain.prompts import ChatPromptTemplate
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import FlashrankRerank
+from langchain.schema import Document
 from langchain_chroma import Chroma
 from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_core.runnables import (
-    RunnableLambda,
-    RunnableParallel,
-    RunnablePassthrough,
-)
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from backend.utils import setup_logging
@@ -67,18 +62,6 @@ class QueryPipeline:
     ) -> None:
         """
         Initializes the QueryPipeline with necessary configurations.
-
-        Args:
-            db_dir (str): Directory of the vector store.
-            db_collection (str): Collection name in the vector store.
-            embedding_model (str): Model name for embeddings.
-            chat_model (str): Model name for chat.
-            chat_temperature (float): Temperature setting for the chat model.
-            search_results_num (int): Number of search results to retrieve.
-            langsmith_project (str): Langsmith project identifier.
-            prompt_templates_dir (str, optional): Directory for prompt templates.
-            query_expansion (bool, optional): Enable query expansion.
-            rerank (bool, optional): Enable reranking of documents.
         """
         self.db_dir = db_dir
         self.db_collection = db_collection
@@ -269,30 +252,6 @@ class QueryPipeline:
             logger.error(f"Error retrieving documents: {e}")
             return []
 
-    def expand_query(self, query: str) -> str:
-        """
-        Expand the user query to improve retrieval.
-
-        Args:
-            query (str): The original query.
-
-        Returns:
-            str: The expanded query.
-        """
-        logger.info(f"Expanding query: {query}")
-        try:
-            expanded_results = self.query_expansion_chain.invoke({"user_input": query})
-            if isinstance(expanded_results, list) and expanded_results:
-                expanded_query = expanded_results[0].expanded_query
-                logger.info(f"Expanded query: {expanded_query}")
-                return expanded_query
-            else:
-                logger.warning("Query expansion returned no results. Using original query.")
-                return query  # Fallback to original query
-        except Exception as e:
-            logger.error(f"Error expanding query: {e}")
-            return query  # Fallback to original query
-
     def deduplicate_documents(self, docs: List[Document]) -> List[Document]:
         """
         Remove duplicate documents based on content.
@@ -362,32 +321,6 @@ class QueryPipeline:
             logger.error(f"Error generating summary: {e}")
             return "I'm sorry, I couldn't generate a summary based on the provided context."
 
-    def get_unique_titles(self) -> List[str]:
-        """
-        Retrieve all unique document titles from the vector store.
-
-        Returns:
-            List[str]: List of unique titles.
-        """
-        logger.info("Retrieving unique document titles from vector store.")
-        try:
-            # Fetch all documents from the vector store
-            collection = self.vectorstore.get()
-
-            if "metadatas" not in collection:
-                logger.error("No metadatas key found in Chroma response")
-                return []
-
-            metadatas = collection["metadatas"]
-
-            titles = {metadata.get("title", "Untitled") for metadata in metadatas}
-            unique_titles = sorted(titles)
-            logger.info(f"Retrieved {len(unique_titles)} unique titles.")
-            return unique_titles
-        except Exception as e:
-            logger.error(f"Error retrieving unique titles: {e}")
-            return []
-
     def run_query(self, question: str, metadata_filter: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Complete query pipeline with optional metadata filter.
@@ -448,26 +381,18 @@ def main() -> None:
         logger.info("Environment variables loaded.")
 
         # Constants
-        PDF_DIR = os.getenv("PDF_DIR")
         DB_DIR = os.getenv("DB_DIR")
         DB_COLLECTION = os.getenv("DB_COLLECTION")
-        CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 1000))  # Default value if not set
-        CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 200))  # Default value if not set
         EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
-        DATA_DIR = os.getenv("DATA_DIR")
         CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-3.5-turbo")  # Default model
         CHAT_TEMPERATURE = float(os.getenv("CHAT_TEMPERATURE", 0.7))  # Default temperature
         SEARCH_RESULTS_NUM = int(os.getenv("SEARCH_RESULTS_NUM", 10))
         LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT")
 
         # Log loaded environment variables for verification
-        logger.debug(f"PDF_DIR: {PDF_DIR}")
         logger.debug(f"DB_DIR: {DB_DIR}")
         logger.debug(f"DB_COLLECTION: {DB_COLLECTION}")
-        logger.debug(f"CHUNK_SIZE: {CHUNK_SIZE}")
-        logger.debug(f"CHUNK_OVERLAP: {CHUNK_OVERLAP}")
         logger.debug(f"EMBEDDING_MODEL: {EMBEDDING_MODEL}")
-        logger.debug(f"DATA_DIR: {DATA_DIR}")
         logger.debug(f"CHAT_MODEL: {CHAT_MODEL}")
         logger.debug(f"CHAT_TEMPERATURE: {CHAT_TEMPERATURE}")
         logger.debug(f"SEARCH_RESULTS_NUM: {SEARCH_RESULTS_NUM}")
@@ -475,11 +400,9 @@ def main() -> None:
 
         # Check essential environment variables
         essential_vars = {
-            "PDF_DIR": PDF_DIR,
             "DB_DIR": DB_DIR,
             "DB_COLLECTION": DB_COLLECTION,
-            "EMBEDDING_MODEL": EMBEDDING_MODEL,
-            "DATA_DIR": DATA_DIR
+            "EMBEDDING_MODEL": EMBEDDING_MODEL
         }
         missing_vars = [var for var, value in essential_vars.items() if not value]
         if missing_vars:
