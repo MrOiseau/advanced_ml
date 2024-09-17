@@ -173,8 +173,6 @@ run_indexing.py
 
 db/
 
-
-
 backend/pdf_question_answer_generator.py
-.gitignore
+app_with_feedback.py
 requirements_.txt

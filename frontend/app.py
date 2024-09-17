@@ -56,81 +56,6 @@ if missing_vars:
     st.error(f"Missing required environment variables: {', '.join(missing_vars)}")
     st.stop()
 
-# Define the feedback scoring system
-SCORE_MAPPINGS = {
-    "thumbs": {"👍": 1, "👎": 0},
-    "faces": {"😀": 1, "🙂": 0.75, "😐": 0.5, "🙁": 0.25, "😞": 0},
-}
-
-# Feedback settings
-score_mappings = SCORE_MAPPINGS[FEEDBACK_OPTION]
-
-def _submit_feedback(feedback_data: dict, run_id: str, **kwargs) -> None:
-    """
-    Submit user feedback to LangSmith.
-
-    Args:
-        feedback_data (dict): Feedback data containing user inputs.
-        run_id (str): ID of the query run.
-        **kwargs: Additional metadata to include in the feedback.
-
-    Returns:
-        None
-    """
-    try:
-        if not run_id:
-            logger.error("No run_id provided. Cannot submit feedback.")
-            st.error("Feedback submission failed: No run ID found.")
-            return
-
-        feedback_type_str = f"{FEEDBACK_OPTION} {feedback_data['score']}"
-        score = score_mappings[feedback_data['score']]
-
-        # Formulate comment as a JSON string with additional metadata
-        comment = {
-            "tag": kwargs.get('tag', ''),
-            "user_comment": feedback_data.get("text", ""),
-            "metadata": kwargs,
-        }
-
-        # Record the feedback with the formulated feedback type string and comment
-        feedback_record = langsmith_client.create_feedback(
-            run_id=run_id,
-            key=feedback_type_str,
-            score=score,
-            comment=str(comment),
-        )
-        st.session_state["feedback"] = {
-            "feedback_id": str(feedback_record.id),
-            "score": score,
-        }
-
-        st.toast(f"Feedback submitted: {feedback_data.get('score', 'Thank you!')}")
-        logger.info(f"Sent feedback for run ID: {run_id}")
-    except Exception as e:
-        st.error(f"Failed to submit feedback: {e}")
-        logger.error(f"Feedback submission error: {e}")
-
-# def handle_feedback(tag: str, run_id: str, **kwargs) -> None:
-#     """
-#     Display the feedback component and handle user input.
-
-#     Args:
-#         tag (str): A tag to identify the feedback.
-#         run_id (str): ID of the query run.
-#         **kwargs: Additional metadata for the feedback.
-
-#     Returns:
-#         None
-#     """
-#     feedback_key = f"feedback_{tag}"
-#     feedback = streamlit_feedback(
-#         feedback_type=FEEDBACK_OPTION,
-#         optional_text_label="[Optional] Please provide an explanation",
-#         key=feedback_key,
-#         on_submit=lambda feedback: _submit_feedback(feedback, run_id, tag=tag, **kwargs),
-#     )
-
 @st.cache_resource
 def initialize_query_pipeline() -> QueryPipeline:
     """
@@ -236,8 +161,6 @@ if submit_button and user_input.strip():
                     if doc.strip():  # Skip empty documents
                         st.markdown(f"**Document {idx}**")
                         st.write(doc)
-                        # Use the same run_id for all documents, but differentiate with metadata
-                        # handle_feedback(tag=f"search_{idx-1}", run_id=run_id, query=user_input, doc_index=idx)
                         st.markdown("---")  # Add a separator between documents
             else:
                 st.write("No documents retrieved.")
