@@ -4,6 +4,7 @@ import streamlit as st
 from dotenv import load_dotenv
 import uuid
 from backend.querying_17_09_24 import QueryPipeline
+# from backend.querying import QueryPipeline
 from langsmith import Client
 from langchain.callbacks import tracing_v2_enabled
 from backend.utils import setup_logging

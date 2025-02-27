@@ -11,6 +11,7 @@ This project implements an AI-powered document retrieval system using Python, La
 - Vector-based document retrieval for efficient search
 - Query rewriting for improved search accuracy
 - Document reranking with FlashrankRerank for relevance optimization
+- Semantic document chunking using sentence embeddings and k-means clustering
 - Summarization of retrieved documents
 - Streamlit-based web interface for easy interaction
 - Features like query rewriting and user feedback integration using LangSmith
@@ -21,7 +22,9 @@ This project implements an AI-powered document retrieval system using Python, La
 
 1. **`indexing.py`**: Handles PDF document ingestion and indexing into ChromaDB. It processes documents into chunks, generates vector embeddings, and stores them in the database for efficient retrieval.
 2. **`querying.py`**: Manages query processing, query rewriting, document retrieval, reranking, and summarization. It uses vector embeddings to retrieve documents and applies query expansion and reranking for better results.
-3. **`utils.py`**: Contains utility functions for logging and generating a deduplicated evaluation dataset.
+3. **`chunker_advanced.py`**: Implements semantic text chunking using sentence embeddings and k-means clustering for more intelligent document splitting.
+4. **`rag_evaluation.py`**: Provides comprehensive evaluation metrics (ROUGE, BLEU, F1, semantic similarity) and visualization of system performance.
+5. **`utils.py`**: Contains utility functions for logging and generating a deduplicated evaluation dataset.
 
 ### Frontend
 
@@ -45,8 +48,8 @@ Before running the system, ensure you have the necessary dependencies installed 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/ai-document-retrieval-system.git
-   cd ai-document-retrieval-system
+   git clone https://github.com/MrOiseau/advanced_ml.git
+   cd advanced_ml
    ```
 
 2. Install dependencies:
@@ -55,12 +58,21 @@ Before running the system, ensure you have the necessary dependencies installed 
    ```
 
 3. Copy `.env.example` to `.env` and add values for environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   In the `.env` file, fill in:
-   - `OPENAI_API_KEY`: Your OpenAI API key
-   - `LANGSMITH_API_KEY`: Your LangSmith API key
+    ```bash
+    cp .env.example .env
+    ```
+    In the `.env` file, fill in:
+    - `OPENAI_API_KEY`: Your OpenAI API key
+    - `LANGSMITH_API_KEY`: Your LangSmith API key
+    - `DB_DIR`: Directory for ChromaDB storage
+    - `DB_COLLECTION`: Name for the ChromaDB collection
+    - `EMBEDDING_MODEL`: OpenAI embedding model name (e.g., "text-embedding-3-small")
+    - `CHAT_MODEL`: OpenAI chat model name (e.g., "gpt-3.5-turbo")
+    - `CHAT_TEMPERATURE`: Temperature for chat model (default: 0.7)
+    - `SEARCH_RESULTS_NUM`: Number of results to retrieve (default: 5)
+    - `ADVANCED_CHUNKING`: Set to "true" to enable semantic chunking
+    - `CHUNK_SIZE`: Size of text chunks (default: 1000)
+    - `CHUNK_OVERLAP`: Overlap between chunks (default: 200)
 
 4. Run the indexing script to process and index PDF documents located in the `data/pdfs` folder:
    ```bash
@@ -136,13 +148,14 @@ Example evaluation result for the question: "What is the purpose of multi-head a
 
 ## Evaluation Dataset Creation
 
-To evaluate the system, an evaluation dataset is created using GPT-4o by generating questions, context, and answers from PDF documents.
+The evaluation dataset is created by generating questions, context, and answers from the PDF documents using large language models. This process ensures comprehensive coverage of the document content while maintaining high-quality question-answer pairs for testing the system's performance.
 
 ### Steps to Create the Evaluation Dataset
 
-1. **Upload Documents**: Upload relevant PDF documents into GPT-4o.
-2. **Dataset Generation**: Use GPT-4o to generate questions, context, and answers from the content of the documents.
+1. **Document Processing**: Process the PDF documents to extract meaningful content.
+2. **Dataset Generation**: Use language models to generate diverse questions and answers from the document content.
 3. **Dataset Formatting**: Structure the generated dataset into a JSON format with unique IDs, questions, context, and answers.
+4. **Quality Verification**: Ensure the generated pairs accurately reflect the document content and maintain high quality.
 
 Example dataset entry:
 

@@ -3,6 +3,7 @@ import json
 from typing import List, Optional
 
 from dotenv import load_dotenv
+from backend.chunker_advanced import SemanticClusteringChunker
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
@@ -20,7 +21,7 @@ class IngestionPipeline:
     """
     def __init__(self, pdf_dir: str, db_dir: str, db_collection: str, chunk_size: int, chunk_overlap: int, data_dir: str, embedding_model: str,) -> None:
         """
-        Initialize the ingestion pipeline with necessary directories and configurations.
+        Initialize the ingestion pipeline with necessary directories and configurations, plus advanced chunking toggle.
 
         Args:
             pdf_dir (str): Directory containing PDF files.
@@ -37,6 +38,10 @@ class IngestionPipeline:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.data_dir = data_dir
+        # Read env variable if we want advanced chunking
+        use_advanced_str = os.getenv("ADVANCED_CHUNKING", "false").lower()
+        self.use_advanced_chunking = (use_advanced_str == "true")
+        logger.info(f"Advanced chunking enabled = {self.use_advanced_chunking}")
         self.embedding_model = embedding_model
 
         # Ensure directories exist
@@ -87,10 +92,22 @@ class IngestionPipeline:
         """
         logger.info(f"Chunking {len(docs)} documents.")
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=self.chunk_size,
+            chunk_size=self.chunk_size,  # used only if we do default chunking
             chunk_overlap=self.chunk_overlap,
-            separators = [".\n\n", ".\n", ". ", "!\n\n", "!\n", "? ", "\n\n", "\n", " - ", ": ", "; ", ", ", " "],
+            separators=[
+                ".\n\n", ".\n", ". ", "!\n\n", "!\n", "? ",
+                "\n\n", "\n", " - ", ": ", "; ", ", ", " "
+            ],
         )
+
+        # If advanced chunking, call the advanced chunker
+        if self.use_advanced_chunking:
+            adv_chunker = SemanticClusteringChunker(
+                embedding_model_name="sentence-transformers/all-MiniLM-L6-v2",
+                max_chunk_size=self.chunk_size  # re-using chunk_size as max words
+            )
+            return adv_chunker.chunk_documents(docs)
+
         try:
             chunks = text_splitter.split_documents(docs)
             logger.info(f"Total chunks created: {len(chunks)}")
