@@ -1,13 +1,20 @@
-import spacy
+# Import config first to ensure environment variables are set before other imports
+from backend.config import *
 import numpy as np
 from typing import List, Optional, Dict, Any
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sentence_transformers import SentenceTransformer
+import nltk
+from nltk.tokenize import sent_tokenize
+
+# Download the punkt tokenizer if not already downloaded
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
 
 from langchain.schema import Document
-
-nlp = spacy.load("en_core_web_sm")
 
 
 class SemanticClusteringChunker:
@@ -42,16 +49,19 @@ class SemanticClusteringChunker:
         """
         Main method: for each Document, splits into sentences, embeds them,
         finds the best K (clusters), groups by cluster, forms final chunk(s).
+        
+        Args:
+            docs (List[Document]): List of Document objects to be chunked.
+            
+        Returns:
+            List[Document]: A list of Document objects where each document
+            represents a semantically coherent chunk with the original metadata preserved.
         """
         all_chunks = []
         for doc in docs:
-            # 1) Split into sentences
-            sents = list(nlp(doc.page_content).sents)
-            if not sents:
-                continue
-
-            # 2) Get text & embeddings
-            sentences_text = [s.text.strip() for s in sents if s.text.strip()]
+            # 1) Split into sentences using NLTK
+            text = doc.page_content
+            sentences_text = [s.strip() for s in sent_tokenize(text) if s.strip()]
             if not sentences_text:
                 continue
 
@@ -105,7 +115,7 @@ class SemanticClusteringChunker:
         Select the optimal number of clusters (k) using silhouette scoring.
         """
         n_samples = embeddings.shape[0]
-        # Ako imamo 2 ili manje rečenica, klasterisanje nema smisla
+        # If we have 2 or fewer sentences, clustering doesn't make sense
         if n_samples <= 2:
             return 1
 
@@ -119,8 +129,8 @@ class SemanticClusteringChunker:
         for k in range(2, max_k + 1):
             kmeans = KMeans(n_clusters=k, random_state=self.random_state)
             labels = kmeans.fit_predict(embeddings)
-            # Proverimo da li ima smisla računati silhouette_score
-            # (moraju postojati bar 2 unikatne etikete)
+            # Check if it makes sense to calculate silhouette_score
+            # (there must be at least 2 unique labels)
             if len(np.unique(labels)) >= 2:
                 score = silhouette_score(embeddings, labels)
                 if score > best_score:

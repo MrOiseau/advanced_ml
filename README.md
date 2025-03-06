@@ -20,11 +20,30 @@ This project implements an AI-powered document retrieval system using Python, La
 
 ### Backend
 
-1. **`indexing.py`**: Handles PDF document ingestion and indexing into ChromaDB. It processes documents into chunks, generates vector embeddings, and stores them in the database for efficient retrieval.
-2. **`querying.py`**: Manages query processing, query rewriting, document retrieval, reranking, and summarization. It uses vector embeddings to retrieve documents and applies query expansion and reranking for better results.
-3. **`chunker_advanced.py`**: Implements semantic text chunking using sentence embeddings and k-means clustering for more intelligent document splitting.
-4. **`rag_evaluation.py`**: Provides comprehensive evaluation metrics (ROUGE, BLEU, F1, semantic similarity) and visualization of system performance.
-5. **`utils.py`**: Contains utility functions for logging and generating a deduplicated evaluation dataset.
+1. **`config.py`**: Centralizes all configuration settings and environment variables for the application. It loads variables from the .env file and provides them to other modules, ensuring consistent configuration across the system.
+2. **`indexing.py`**: Handles PDF document ingestion and indexing into ChromaDB. It processes documents into chunks, generates vector embeddings, and stores them in the database for efficient retrieval.
+3. **`querying.py`**: Manages query processing, query rewriting, document retrieval, reranking, and summarization. It uses vector embeddings to retrieve documents and applies query expansion and reranking for better results.
+4. **`chunker_advanced.py`**: Implements semantic text chunking using sentence embeddings and k-means clustering for more intelligent document splitting. This module:
+   - Uses sentence-transformers to create embeddings for each sentence
+   - Determines the optimal number of clusters using silhouette scoring
+   - Groups semantically similar sentences into coherent chunks
+   - Respects maximum chunk size constraints while preserving semantic relationships
+   - Provides more context-aware document splitting compared to traditional character-based methods
+5. **`rag_evaluation.py`**: Provides comprehensive evaluation metrics (ROUGE, BLEU, F1, semantic similarity) and visualization of system performance.
+The evaluation process:
+   - Loading the evaluation dataset
+   - Processing each question
+   - Retrieving relevant documents
+   - Generating answers
+   - Computing evaluation metrics
+   - Outputting average metrics across all questions
+Evaluation Metrics:
+   - BLEU (precision-based overlap)
+   - Exact Match (strict matching)
+   - F1 Score (balance of precision and recall)
+   - Semantic Similarity (meaning-based comparison)
+   - ROUGE scores (ROUGE-1, ROUGE-2, ROUGE-L)
+6. **`utils.py`**: Contains utility functions for logging and generating a deduplicated evaluation dataset.
 
 ### Frontend
 
@@ -42,7 +61,11 @@ This project implements an AI-powered document retrieval system using Python, La
 
 ### Prerequisites
 
-Before running the system, ensure you have the necessary dependencies installed and that you have set up your environment variables.
+Before running the system, ensure you have:
+- Git installed
+- Conda/Miniconda installed (strongly recommended for cross-platform compatibility)
+- An OpenAI API key
+- A LangSmith API key (optional, for tracking and evaluation)
 
 ### Installation Steps
 
@@ -52,39 +75,86 @@ Before running the system, ensure you have the necessary dependencies installed 
    cd advanced_ml
    ```
 
-2. Install dependencies:
+2. **Create and activate a Conda environment** (strongly recommended for ensuring compatibility across different operating systems and Python versions):
+   
    ```bash
+   # For Windows, macOS, and Linux
+   conda create -n advanced_ml python=3.11.11 --y
+   ```
+   
+   **Activate the environment:**
+   
+   ```bash
+   # For Windows/macOS/Linux
+   conda activate advanced_ml
+
+   
+   > **Note:** Using Conda ensures that your project runs consistently regardless of the user's OS or Python version. This project specifically requires Python 3.11.11 for optimal compatibility with all dependencies. If you don't have Conda installed, you can download Miniconda from [here](https://docs.conda.io/en/latest/miniconda.html).
+   >
+   > **Alternative:** If you prefer not to use Conda, you can use a virtual environment with:
+   > ```bash
+   > # For Windows
+   > python -m venv venv
+   > venv\Scripts\activate
+   >
+   > # For macOS/Linux
+   > python -m venv venv
+   > source venv/bin/activate
+   > ```
+
+3. Install dependencies:
+   ```bash
+   # For Windows, macOS, and Linux
    pip install -r requirements.txt
    ```
+   
+   > **Note:** This will install all required packages listed in requirements.txt. If you encounter any issues, try upgrading pip first with `pip install --upgrade pip`.
 
-3. Copy `.env.example` to `.env` and add values for environment variables:
-    ```bash
-    cp .env.example .env
-    ```
-    In the `.env` file, fill in:
-    - `OPENAI_API_KEY`: Your OpenAI API key
-    - `LANGSMITH_API_KEY`: Your LangSmith API key
-    - `DB_DIR`: Directory for ChromaDB storage
-    - `DB_COLLECTION`: Name for the ChromaDB collection
-    - `EMBEDDING_MODEL`: OpenAI embedding model name (e.g., "text-embedding-3-small")
-    - `CHAT_MODEL`: OpenAI chat model name (e.g., "gpt-3.5-turbo")
-    - `CHAT_TEMPERATURE`: Temperature for chat model (default: 0.7)
-    - `SEARCH_RESULTS_NUM`: Number of results to retrieve (default: 5)
-    - `ADVANCED_CHUNKING`: Set to "true" to enable semantic chunking
-    - `CHUNK_SIZE`: Size of text chunks (default: 1000)
-    - `CHUNK_OVERLAP`: Overlap between chunks (default: 200)
-
-4. Run the indexing script to process and index PDF documents located in the `data/pdfs` folder:
+4. **Set up environment variables** by copying `.env_example` to `.env`:
+   
    ```bash
+   # For Windows
+   copy .env_example .env
+   
+   # For macOS/Linux
+   cp .env_example .env
+   ```
+   
+   Edit the `.env` file and add your values for these essential environment variables:
+   - `OPENAI_API_KEY`: Your OpenAI API key (required)
+   - `LANGSMITH_API_KEY`: Your LangSmith API key (optional, for tracking and evaluation)
+   - `DB_DIR`: Directory for ChromaDB storage (default: "./data/db")
+   - `DB_COLLECTION`: Name for the ChromaDB collection (default: "rag_collection_advanced")
+   - `EMBEDDING_MODEL`: OpenAI embedding model name (default: "text-embedding-3-small")
+   - `CHAT_MODEL`: OpenAI chat model name (default: "gpt-4o-mini")
+   - `ADVANCED_CHUNKING`: Set to "true" to enable semantic chunking (default: true)
+   - `CHUNK_SIZE`: Size of text chunks (default: 1000)
+   - `CHUNK_OVERLAP`: Overlap between chunks (default: 200)
+   
+   > **Important:** The `.env` file contains sensitive information like API keys. Never commit this file to version control. The `.env_example` file is included in the repository as a template, but the actual `.env` file is listed in `.gitignore`.
+
+5. **Create the vector index** by processing and indexing PDF documents:
+   ```bash
+   # Make sure you're in the project root directory and your environment is activated
    python backend/indexing.py
    ```
+   
+   > **Note:** This step will process all PDF documents located in the `data/pdfs` folder and create a vector index using ChromaDB. The process may take some time depending on the number and size of your PDF files.
+   >
+   > **Troubleshooting:** If you encounter a "ModuleNotFoundError", ensure your PYTHONPATH is set correctly. The .env file includes `PYTHONPATH=$PYTHONPATH:`pwd`` which should handle this, but if you're on Windows, you might need to set it manually or use:
+   > ```bash
+   > # For Windows
+   > set PYTHONPATH=%PYTHONPATH%;%cd%
+   > ```
 
-5. Start the Streamlit app:
+6. **Start the Streamlit app**:
    ```bash
+   # Make sure your environment is activated
    streamlit run frontend/app.py
    ```
 
-6. Open the provided URL in your web browser to access the AI Document Retrieval Interface.
+7. Open the provided URL in your web browser to access the AI Document Retrieval Interface.
+   > **Note:** By default, Streamlit will run on http://localhost:8501
 
 ## Usage
 
@@ -185,3 +255,53 @@ Contributions are welcome! Please follow the code style, add tests for new featu
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE file](LICENSE) for details.
+
+## Troubleshooting
+
+If you encounter issues while setting up or running the project, here are some common solutions:
+
+### Environment Setup Issues
+
+- **ModuleNotFoundError**: If you encounter module import errors, ensure your PYTHONPATH is set correctly:
+  ```bash
+  # For macOS/Linux
+  export PYTHONPATH=$PYTHONPATH:$(pwd)
+  
+  # For Windows
+  set PYTHONPATH=%PYTHONPATH%;%cd%
+  ```
+
+- **Conda environment issues**: If you have problems with the Conda environment:
+  ```bash
+  # List all environments to verify creation
+  conda env list
+  
+  # Remove and recreate if necessary
+  conda remove --name advanced_ml --all
+  conda create -n advanced_ml python=3.11.11
+  ```
+
+### API and Environment Variable Issues
+
+- **API Key errors**: Ensure your OpenAI API key is correctly set in the `.env` file and has sufficient credits
+- **Environment variables not loading**: Verify that python-dotenv is installed and your `.env` file is in the project root
+
+### Database and Indexing Issues
+
+- **ChromaDB errors**: If you encounter issues with the vector database:
+  ```bash
+  # Remove the existing database and reindex
+  rm -rf ./data/db
+  python backend/indexing.py
+  ```
+
+- **PDF processing errors**: Ensure your PDF files are valid and readable
+
+### Streamlit App Issues
+
+- **Streamlit not starting**: Try running with the debug flag:
+  ```bash
+  streamlit run --debug frontend/app.py
+  ```
+
+- **Browser not opening automatically**: Manually navigate to http://localhost:8501
