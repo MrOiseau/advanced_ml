@@ -168,12 +168,7 @@ cython_debug/
 __pycache__/
 *.pyc
 .venv/
-run_indexing.py
-
 
 db/
+data/
 
-backend/pdf_question_answer_generator.py
-app_with_feedback.py
-backend/querying_17_09_24.py
-requirements_.txt

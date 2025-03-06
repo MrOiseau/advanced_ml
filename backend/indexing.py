@@ -1,8 +1,9 @@
-import os
+# Import config first to ensure environment variables are set before other imports
+from backend.config import *
 import json
 from typing import List, Optional
-
-from dotenv import load_dotenv
+import os
+from backend.chunker_advanced import SemanticClusteringChunker
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
@@ -15,12 +16,20 @@ logger = setup_logging(__name__)
 
 class IngestionPipeline:
     """
-    A pipeline to ingest PDF documents, process them into chunks, enrich with metadata,
-    index using ChromaDB with OpenAI embeddings, and verify the indexing.
+    A pipeline to ingest PDF documents by following several steps:
+    - Loading environment variables
+    - Verifying/creating directories for database and data storage
+    - Finding PDF files in ./data/pdfs
+    - Parsing the PDF files by using PyPDFLoader from LangChain
+    - Chunking the documents (SemanticClusteringChunker, RecursiveCharacterTextSplitter)
+    - Enriching chunks with metadata (prepends the document title to each chunk)
+    - Saving data to a JSON file (./data/preview_data_to_ingest_to_db.json)
+    - Indexing the chunks using ChromaDB with OpenAI embeddings
+    - Verifying the index
     """
     def __init__(self, pdf_dir: str, db_dir: str, db_collection: str, chunk_size: int, chunk_overlap: int, data_dir: str, embedding_model: str,) -> None:
         """
-        Initialize the ingestion pipeline with necessary directories and configurations.
+        Initialize the ingestion pipeline with necessary directories and configurations, plus advanced chunking toggle.
 
         Args:
             pdf_dir (str): Directory containing PDF files.
@@ -37,6 +46,9 @@ class IngestionPipeline:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.data_dir = data_dir
+        # Use ADVANCED_CHUNKING from config module
+        self.use_advanced_chunking = ADVANCED_CHUNKING
+        logger.info(f"Advanced chunking enabled = {self.use_advanced_chunking}")
         self.embedding_model = embedding_model
 
         # Ensure directories exist
@@ -87,10 +99,22 @@ class IngestionPipeline:
         """
         logger.info(f"Chunking {len(docs)} documents.")
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=self.chunk_size,
+            chunk_size=self.chunk_size,  # used only if we do default chunking
             chunk_overlap=self.chunk_overlap,
-            separators = [".\n\n", ".\n", ". ", "!\n\n", "!\n", "? ", "\n\n", "\n", " - ", ": ", "; ", ", ", " "],
+            separators=[
+                ".\n\n", ".\n", ". ", "!\n\n", "!\n", "? ",
+                "\n\n", "\n", " - ", ": ", "; ", ", ", " "
+            ],
         )
+
+        # If advanced chunking, call the advanced chunker
+        if self.use_advanced_chunking:
+            adv_chunker = SemanticClusteringChunker(
+                embedding_model_name="sentence-transformers/all-MiniLM-L6-v2",
+                max_chunk_size=self.chunk_size  # re-using chunk_size as max words
+            )
+            return adv_chunker.chunk_documents(docs)
+
         try:
             chunks = text_splitter.split_documents(docs)
             logger.info(f"Total chunks created: {len(chunks)}")
@@ -152,7 +176,12 @@ class IngestionPipeline:
         try:
             logger.info(f"Indexing {len(chunks)} chunks.")
 
-            embeddings = OpenAIEmbeddings(model=os.getenv("EMBEDDING_MODEL"))
+            # Use EMBEDDING_MODEL from config module
+            embeddings = OpenAIEmbeddings(
+                model=EMBEDDING_MODEL,
+                openai_api_key=os.getenv("OPENAI_API_KEY"),
+                disallowed_special=(),
+            )
             vector_store = Chroma.from_documents(
                 documents=chunks,
                 embedding=embeddings,
@@ -176,7 +205,12 @@ class IngestionPipeline:
         try:
             logger.info("Verifying the index.")
             db_path = self.db_dir
-            embeddings = OpenAIEmbeddings(model=os.getenv("EMBEDDING_MODEL"))
+            # Use EMBEDDING_MODEL from config module
+            embeddings = OpenAIEmbeddings(
+                model=EMBEDDING_MODEL,
+                openai_api_key=os.getenv("OPENAI_API_KEY"),
+                disallowed_special=(),
+            )
             vector_store = Chroma(
                 persist_directory=db_path,
                 collection_name=self.db_collection,
@@ -226,19 +260,9 @@ def main() -> None:
     try:
         # Log the start of the script
         logger.info("Start of the ingestion pipeline.")
-
-        # Load environment variables
-        load_dotenv()
+        
+        # Environment variables are already loaded by config module
         logger.info("Environment variables loaded.")
-
-        # Constants
-        PDF_DIR = os.getenv("PDF_DIR")
-        DB_DIR = os.getenv("DB_DIR")
-        DB_COLLECTION = os.getenv("DB_COLLECTION")
-        CHUNK_SIZE = int(os.getenv("CHUNK_SIZE"))
-        CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP"))
-        EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
-        DATA_DIR = os.getenv("DATA_DIR")
 
         # Log loaded environment variables for verification
         logger.debug(f"PDF_DIR: {PDF_DIR}")
@@ -249,25 +273,11 @@ def main() -> None:
         logger.debug(f"EMBEDDING_MODEL: {EMBEDDING_MODEL}")
         logger.debug(f"DATA_DIR: {DATA_DIR}")
 
-        # Check essential environment variables
-        required_vars = {
-            "PDF_DIR": PDF_DIR,
-            "DB_DIR": DB_DIR,
-            "DB_COLLECTION": DB_COLLECTION,
-            "EMBEDDING_MODEL": EMBEDDING_MODEL,
-            "DATA_DIR": DATA_DIR,
-        }
-        missing_vars = [var for var, value in required_vars.items() if not value]
-        if missing_vars:
-            logger.error(f"Missing environment variables: {', '.join(missing_vars)}")
-            return
-        
-        # Convert CHUNK_SIZE and CHUNK_OVERLAP to integers with defaults
+        # Validate environment variables
         try:
-            chunk_size = int(CHUNK_SIZE) if CHUNK_SIZE else 1000
-            chunk_overlap = int(CHUNK_OVERLAP) if CHUNK_OVERLAP else 200
-        except ValueError as ve:
-            logger.error(f"Invalid chunk size or overlap values: {ve}")
+            validate_environment()
+        except ValueError as e:
+            logger.error(str(e))
             return
 
         # Initialize the pipeline
@@ -275,8 +285,8 @@ def main() -> None:
             pdf_dir=PDF_DIR,
             db_dir=DB_DIR,
             db_collection=DB_COLLECTION,
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
+            chunk_size=CHUNK_SIZE,
+            chunk_overlap=CHUNK_OVERLAP,
             data_dir=DATA_DIR,
             embedding_model=EMBEDDING_MODEL,
         )

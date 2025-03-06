@@ -1,36 +1,21 @@
-import os
+# Import config first to ensure environment variables are set before other imports
+from backend.config import *
 import logging
 import streamlit as st
-from dotenv import load_dotenv
 import uuid
-from backend.querying_17_09_24 import QueryPipeline
+from backend.querying import QueryPipeline
 from langsmith import Client
 from langchain.callbacks import tracing_v2_enabled
 from backend.utils import setup_logging
 
-# Load environment variables
-load_dotenv()
-
 # Set Streamlit page configuration at the very beginning
 st.set_page_config(page_title="AI Document Retrieval", layout="wide")
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Configure logging
 logger = setup_logging(__name__)
 
-
-# Environment Variables with Validation
-DB_DIR = os.getenv("DB_DIR")
-DB_COLLECTION = os.getenv("DB_COLLECTION")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
-CHAT_MODEL = os.getenv("CHAT_MODEL")
-CHAT_TEMPERATURE = float(os.getenv("CHAT_TEMPERATURE", 0.7))
-SEARCH_RESULTS_NUM = int(os.getenv("SEARCH_RESULTS_NUM", 5))
+# Use constants from config module
 FEEDBACK_OPTION = "faces"  # Options can be "thumbs" or "faces"
-LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 
 # Initialize LangSmith client for feedback
@@ -63,6 +48,7 @@ def initialize_query_pipeline() -> QueryPipeline:
         QueryPipeline: An initialized instance of QueryPipeline.
     """
     try:
+        # Use constants from config module
         pipeline = QueryPipeline(
             db_dir=DB_DIR,
             db_collection=DB_COLLECTION,
@@ -148,7 +134,37 @@ if submit_button and user_input.strip():
             st.subheader("📚 Summary of Retrieved Information")
             summary = query_pipeline.generate_summary(user_input, result.get("documents", ""))
             st.write(summary)
-            # handle_feedback(tag="rag_summary", run_id=run_id, query=user_input)
+            
+            # # Add feedback buttons
+            # st.write("Was this summary helpful?")
+            # col1, col2, col3 = st.columns([1, 1, 3])
+            # with col1:
+            #     if st.button("👍 Yes"):
+            #         try:
+            #             langsmith_client.create_feedback(
+            #                 run_id=run_id,
+            #                 key="user_feedback",
+            #                 score=1.0,
+            #                 comment="User found the summary helpful"
+            #             )
+            #             st.success("Thank you for your feedback!")
+            #         except Exception as e:
+            #             st.error(f"Error recording feedback: {e}")
+            #             logger.error(f"Feedback error: {e}")
+            
+            # with col2:
+            #     if st.button("👎 No"):
+            #         try:
+            #             langsmith_client.create_feedback(
+            #                 run_id=run_id,
+            #                 key="user_feedback",
+            #                 score=0.0,
+            #                 comment="User did not find the summary helpful"
+            #             )
+            #             st.success("Thank you for your feedback!")
+            #         except Exception as e:
+            #             st.error(f"Error recording feedback: {e}")
+            #             logger.error(f"Feedback error: {e}")
 
         with documents_tab:
             st.subheader("📄 Retrieved Documents")
