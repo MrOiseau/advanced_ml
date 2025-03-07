@@ -159,7 +159,7 @@ class IngestionPipeline:
 
     def chunk_documents(self, docs: List[Document]) -> List[Document]:
         """
-        Chunk documents using the specified chunker with parallel processing.
+        Chunk documents using the specified chunker without parallel processing.
 
         Args:
             docs (List[Document]): List of document dictionaries to be chunked.
@@ -167,50 +167,14 @@ class IngestionPipeline:
         Returns:
             List[Document]: A list of chunked document dictionaries.
         """
-        logger.info(f"Chunking {len(docs)} documents using {self.chunker.name} with parallel processing.")
+        logger.info(f"Chunking {len(docs)} documents using {self.chunker.name} without parallel processing.")
         
         try:
             # Measure chunking time
             start_time = time.time()
             
-            # If there are too few documents, don't use parallel processing
-            if len(docs) <= 4:
-                chunks = self.chunker.chunk_documents(docs)
-            else:
-                # Determine optimal batch size based on number of documents
-                # For very large documents, we want smaller batches
-                batch_size = max(1, min(10, len(docs) // (os.cpu_count() or 4)))
-                logger.info(f"Using parallel processing with batch size: {batch_size}")
-                
-                # Split documents into batches for parallel processing
-                doc_batches = [docs[i:i+batch_size] for i in range(0, len(docs), batch_size)]
-                
-                # Define a function to process a batch of documents
-                def process_batch(batch):
-                    try:
-                        return self.chunker.chunk_documents(batch)
-                    except Exception as e:
-                        logger.error(f"Error processing batch: {e}")
-                        return []
-                
-                # Use ProcessPoolExecutor for CPU-bound chunking tasks
-                # This is more efficient than ThreadPoolExecutor for CPU-intensive operations
-                all_chunks = []
-                with concurrent.futures.ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
-                    # Submit all batches for processing
-                    future_to_batch = {executor.submit(process_batch, batch): i for i, batch in enumerate(doc_batches)}
-                    
-                    # Collect results as they complete
-                    for future in concurrent.futures.as_completed(future_to_batch):
-                        batch_idx = future_to_batch[future]
-                        try:
-                            batch_chunks = future.result()
-                            all_chunks.extend(batch_chunks)
-                            logger.info(f"Completed chunking batch {batch_idx+1}/{len(doc_batches)} - got {len(batch_chunks)} chunks")
-                        except Exception as e:
-                            logger.error(f"Exception processing batch {batch_idx+1}: {e}")
-                
-                chunks = all_chunks
+            # Process all documents without parallel processing
+            chunks = self.chunker.chunk_documents(docs)
             
             chunking_time = time.time() - start_time
             
@@ -340,25 +304,49 @@ class IngestionPipeline:
                 embedding_function=embeddings,
             )
             
+            # Filter complex metadata from documents
+            filtered_chunks = []
+            for chunk in chunks:
+                # Create a copy of the document
+                filtered_chunk = Document(
+                    page_content=chunk.page_content,
+                    metadata={}
+                )
+                
+                # Filter metadata to only include simple types
+                for key, value in chunk.metadata.items():
+                    # Skip lists and other complex types
+                    if isinstance(value, (str, int, float, bool)):
+                        filtered_chunk.metadata[key] = value
+                    elif key == "heading_path" and isinstance(value, list):
+                        # Skip the list but keep the string version
+                        continue
+                
+                filtered_chunks.append(filtered_chunk)
+            
+            logger.info(f"Filtered complex metadata from {len(chunks)} chunks")
+            
             # Process in batches
-            for i in range(0, len(chunks), batch_size):
-                batch = chunks[i:i+batch_size]
+            for i in range(0, len(filtered_chunks), batch_size):
+                batch = filtered_chunks[i:i+batch_size]
                 batch_num = i // batch_size + 1
                 
                 logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch)} chunks)")
                 
-                # Add documents in batch
-                vector_store.add_documents(documents=batch)
-                
-                logger.info(f"Completed batch {batch_num}/{total_batches}")
+                try:
+                    # Add documents in batch
+                    vector_store.add_documents(documents=batch)
+                    logger.info(f"Completed batch {batch_num}/{total_batches}")
+                except Exception as e:
+                    logger.error(f"Error processing batch {batch_num}: {e}")
+                    # Continue with next batch instead of failing completely
+                    continue
             
-            # Persist the vector store
-            vector_store.persist()
-            
+            # Calculate indexing time
             indexing_time = time.time() - start_time
             self.performance_metrics["indexing_time"] = indexing_time
 
-            # Chroma automatically persists the data
+            # Chroma automatically persists the data with PersistentClient
             logger.info(f"Indexing completed and persisted to: {self.db_dir}")
             logger.info(f"Indexing time: {indexing_time:.2f} seconds")
         except Exception as e:

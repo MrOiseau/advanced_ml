@@ -69,11 +69,11 @@ def initialize_query_pipeline() -> QueryPipeline:
 
 # Define available collections
 available_collections = [
-    {"name": "rag_collection_recursive", "description": "Recursive Character Chunking"},
-    {"name": "rag_collection_semantic", "description": "Semantic Clustering Chunking"},
-    {"name": "rag_collection_topic", "description": "Topic-Based Chunking"},
+    {"name": "rag_collection_recursive_character", "description": "Recursive Character Chunking"},
+    {"name": "rag_collection_semantic_clustering", "description": "Semantic Clustering Chunking"},
+    {"name": "rag_collection_topic_based", "description": "Topic-Based Chunking"},
     {"name": "rag_collection_hierarchical", "description": "Hierarchical Chunking"},
-    {"name": "rag_collection_advanced", "description": "Default Collection"}
+    {"name": "rag_collection_sentence_transformers", "description": "Sentence Transformers Chunking"}
 ]
 
 # Create a mapping for easy lookup
@@ -260,10 +260,11 @@ if submit_button and user_input.strip():
             st.markdown("""
             | Collection | Chunking Method | Best For |
             |------------|-----------------|----------|
-            | rag_collection_recursive | Recursive Character | Simple text with uniform content |
-            | rag_collection_semantic | Semantic Clustering | Content with varying topics and themes |
-            | rag_collection_topic | Topic-Based | Documents with distinct topical sections |
+            | rag_collection_recursive_character | Recursive Character | Simple text with uniform content |
+            | rag_collection_semantic_clustering | Semantic Clustering | Content with varying topics and themes |
+            | rag_collection_topic_based | Topic-Based | Documents with distinct topical sections |
             | rag_collection_hierarchical | Hierarchical | Structured documents with headings and sections |
+            | rag_collection_sentence_transformers | Sentence Transformers | Semantic similarity and context preservation |
             """)
             
             # Add a note about creating collections

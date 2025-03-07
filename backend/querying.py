@@ -137,13 +137,31 @@ class QueryPipeline:
             logger.error(f"Error loading templates: {e}")
             raise
 
-    def _initialize_embeddings(self) -> OpenAIEmbeddings:
+    def _initialize_embeddings(self):
         """
         Initializes the embeddings model.
 
         Returns:
-            OpenAIEmbeddings: Initialized embeddings model.
+            Embeddings: Initialized embeddings model (OpenAI or HuggingFace).
         """
+        # Check if we should use local embeddings
+        use_local_embeddings = os.getenv("USE_LOCAL_EMBEDDINGS", "false").lower() == "true"
+        
+        if use_local_embeddings:
+            # Use HuggingFace embeddings for local processing (no API calls)
+            try:
+                # Use the updated import path for HuggingFaceEmbeddings
+                from langchain_huggingface import HuggingFaceEmbeddings
+                logger.info("Using local HuggingFace embeddings model")
+                embeddings = HuggingFaceEmbeddings(
+                    model_name="sentence-transformers/all-MiniLM-L6-v2"
+                )
+                return embeddings
+            except ImportError:
+                logger.warning("HuggingFaceEmbeddings not available, falling back to OpenAI")
+                # Fall back to OpenAI embeddings
+        
+        # Use OpenAI embeddings
         if self.embedding_model in SUPPORTED_EMBEDDING_MODELS:
             embeddings = OpenAIEmbeddings(
                 model=self.embedding_model,
@@ -249,6 +267,15 @@ class QueryPipeline:
         """
         logger.info(f"Retrieving documents for query: {query} with metadata filter: {metadata_filter}")
         try:
+            # Log collection information
+            logger.info(f"Using collection: {self.db_collection}")
+            
+            # Check if collection has documents
+            collection = self.vectorstore.get()
+            if "metadatas" not in collection or len(collection["metadatas"]) == 0:
+                logger.warning(f"Collection '{self.db_collection}' is empty. No documents to retrieve from.")
+                return []
+                
             search_kwargs = {"k": self.search_results_num}
             if metadata_filter:
                 search_kwargs["filter"] = metadata_filter
@@ -383,6 +410,15 @@ class QueryPipeline:
                 return []
 
             metadatas = collection["metadatas"]
+            
+            # Log more details about the collection
+            logger.info(f"Collection name: {self.db_collection}")
+            logger.info(f"Total documents in collection: {len(metadatas)}")
+            
+            # Check if collection is empty
+            if len(metadatas) == 0:
+                logger.warning(f"Collection '{self.db_collection}' is empty. No documents have been indexed.")
+                return []
 
             titles = {metadata.get("title", "Untitled") for metadata in metadatas}
             unique_titles = sorted(titles)
