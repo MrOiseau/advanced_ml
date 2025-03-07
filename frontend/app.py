@@ -67,22 +67,79 @@ def initialize_query_pipeline() -> QueryPipeline:
         st.error(f"Initialization error: {e}")
         st.stop()
 
-# Initialize Query Pipeline
-if "query_pipeline" not in st.session_state:
-    st.session_state["query_pipeline"] = initialize_query_pipeline()
+# Define available collections
+available_collections = [
+    {"name": "rag_collection_recursive", "description": "Recursive Character Chunking"},
+    {"name": "rag_collection_semantic", "description": "Semantic Clustering Chunking"},
+    {"name": "rag_collection_topic", "description": "Topic-Based Chunking"},
+    {"name": "rag_collection_hierarchical", "description": "Hierarchical Chunking"},
+    {"name": "rag_collection_advanced", "description": "Default Collection"}
+]
+
+# Create a mapping for easy lookup
+collection_descriptions = {c["name"]: c["description"] for c in available_collections}
+
+# Modify the query pipeline initialization to accept a collection name
+@st.cache_resource(hash_funcs={dict: lambda _: None})
+def initialize_query_pipeline(collection_name=DB_COLLECTION):
+    """
+    Initialize the QueryPipeline and cache it to avoid redundant setups.
+
+    Args:
+        collection_name (str): The name of the ChromaDB collection to use.
+
+    Returns:
+        QueryPipeline: An initialized instance of QueryPipeline.
+    """
+    try:
+        # Use constants from config module but override the collection name
+        pipeline = QueryPipeline(
+            db_dir=DB_DIR,
+            db_collection=collection_name,  # Use the provided collection name
+            embedding_model=EMBEDDING_MODEL,
+            chat_model=CHAT_MODEL,
+            chat_temperature=CHAT_TEMPERATURE,
+            search_results_num=SEARCH_RESULTS_NUM,
+            langsmith_project=LANGSMITH_PROJECT,
+            query_expansion=True,  # Enable if desired
+            rerank=True,           # Enable if desired
+        )
+        logger.info(f"QueryPipeline initialized successfully with collection: {collection_name}")
+        return pipeline
+    except Exception as e:
+        logger.error(f"Failed to initialize QueryPipeline: {e}")
+        st.error(f"Initialization error: {e}")
+        st.stop()
+
+# Streamlit UI Setup
+st.title("📄 AI Document Retrieval Interface")
+
+# Sidebar for Filters and Settings
+st.sidebar.title("Settings & Filters")
+
+# Collection Selection
+st.sidebar.subheader("Vector Database Selection")
+selected_collection = st.sidebar.selectbox(
+    "Select Vector Database:",
+    options=[c["name"] for c in available_collections],
+    format_func=lambda x: f"{x} ({collection_descriptions.get(x, 'Unknown')})",
+    help="Choose which vector database to query. Each database contains documents chunked with a different method."
+)
+
+# Initialize Query Pipeline with selected collection
+if "query_pipeline" not in st.session_state or st.session_state.get("current_collection") != selected_collection:
+    with st.spinner(f"Loading {collection_descriptions.get(selected_collection, 'Unknown')} database..."):
+        st.session_state["query_pipeline"] = initialize_query_pipeline(selected_collection)
+        st.session_state["current_collection"] = selected_collection
+        st.success(f"Loaded {collection_descriptions.get(selected_collection, 'Unknown')} database")
 
 query_pipeline = st.session_state["query_pipeline"]
 
 # Fetch unique titles for filtering
 unique_titles = query_pipeline.get_unique_titles()
 
-# Streamlit UI Setup
-st.title("📄 AI Document Retrieval Interface")
-
-# Sidebar for Filters
-st.sidebar.title("Set up Filters")
-
 # Title Filter
+st.sidebar.subheader("Document Filters")
 selected_titles = st.sidebar.multiselect(
     "Filter by Title:",
     options=unique_titles,
@@ -181,7 +238,11 @@ if submit_button and user_input.strip():
 
         with system_tab:
             st.subheader("🔍 System Information")
+            
+            # Add collection/chunking method info
             system_info = {
+                "Collection": selected_collection,
+                "Chunking Method": collection_descriptions.get(selected_collection, "Unknown"),
                 "Embedding Model": query_pipeline.embedding_model,
                 "Chat Model": query_pipeline.chat_model,
                 "Temperature": query_pipeline.chat_temperature,
@@ -193,6 +254,25 @@ if submit_button and user_input.strip():
             # Display LangSmith trace link using the trace_url from the callback
             if trace_url:
                 st.markdown(f"[View LangSmith Trace]({trace_url})")
+                
+            # Add information about the different chunking methods
+            st.subheader("📊 Chunking Methods Comparison")
+            st.markdown("""
+            | Collection | Chunking Method | Best For |
+            |------------|-----------------|----------|
+            | rag_collection_recursive | Recursive Character | Simple text with uniform content |
+            | rag_collection_semantic | Semantic Clustering | Content with varying topics and themes |
+            | rag_collection_topic | Topic-Based | Documents with distinct topical sections |
+            | rag_collection_hierarchical | Hierarchical | Structured documents with headings and sections |
+            """)
+            
+            # Add a note about creating collections
+            st.info("""
+            **Note:** To create a new collection with a specific chunking method, run:
+            ```bash
+            python -m backend.indexing --chunker_name="method_name" --db_collection="collection_name"
+            ```
+            """)
     else:
         st.warning("No results found. Try a different query.")
 
