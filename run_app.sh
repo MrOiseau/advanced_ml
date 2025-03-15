@@ -1,17 +1,24 @@
 #!/bin/bash
 
-# More comprehensive approach to exclude problematic modules from Streamlit's file watcher
-# Get paths to problematic modules
-TORCH_PATH=$(python3 -c "import torch; print(torch.__path__[0])")
-TORCH_CLASSES_PATH=$(python3 -c "import os, torch; print(os.path.join(os.path.dirname(torch.__file__), '_classes.py'))")
+# Get the absolute path to the project root directory
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "Project root: $PROJECT_ROOT"
 
-# Set Streamlit server options
-export STREAMLIT_SERVER_EXCLUDE_DIRS="$TORCH_PATH"
-export STREAMLIT_SERVER_ENABLE_STATIC_SERVING=true
+# Set the PYTHONPATH to include the project root directory
+export PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH"
+echo "PYTHONPATH: $PYTHONPATH"
 
-# Disable Streamlit's file watcher for external modules
-export STREAMLIT_SERVER_WATCH_MODULES=false
+# Change to the project root directory
+cd "$PROJECT_ROOT"
 
-# Run the Streamlit app with additional flags
-# Use the Python interpreter from the virtual environment
-python3 -m streamlit run frontend/app.py --server.fileWatcherType none
+# Load environment variables from .env file
+if [ -f .env ]; then
+    set -a
+    source .env
+    set +a
+    echo "Loaded environment variables from .env"
+fi
+
+# Run the Streamlit app
+echo "Starting Streamlit app..."
+streamlit run frontend/app.py

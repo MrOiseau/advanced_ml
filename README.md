@@ -1,344 +1,490 @@
-# Advanced RAG System for Chunking Methods Research
+# Advanced ML Repository
 
-This repository implements a comprehensive Retrieval-Augmented Generation (RAG) framework for evaluating how different document chunking strategies impact information retrieval quality. The system supports rigorous empirical analysis for research on optimal chunking methods in RAG applications.
+This repository contains a Retrieval-Augmented Generation (RAG) system for document processing, indexing, and querying. It was developed as part of a university master thesis titled "The Impact of Chunking Methods on Information Retrieval Quality in RAG Systems".
 
-## Overview
+## Project Overview
 
-Modern RAG systems rely heavily on effective document chunking to create meaningful context windows for retrieval and generation. This framework enables systematic comparison of various chunking approaches through:
+The system implements various document chunking strategies and evaluates their impact on retrieval quality in RAG applications. It provides a framework for:
 
-1. **Modular Implementation** of multiple chunking strategies
-2. **Standardized Evaluation** using established NLP metrics
-3. **Reproducible Experimentation** with configurable parameters
-4. **Performance Optimization** for processing large document collections
-5. **Comprehensive Visualization** of experimental results
+- Processing and indexing PDF documents using different chunking methods
+- Querying the indexed documents with semantic search
+- Comparing the effectiveness of different chunking strategies
+- Evaluating retrieval quality with various metrics
+- Visualizing results through a web interface
 
 ## System Architecture
 
-The framework consists of four main components that work together to enable systematic evaluation of chunking methods:
-
-### Core Components
-
-1. **Document Processing Pipeline**
-   - PDF loading and parsing
-   - Metadata extraction
-   - Document preparation
-
-2. **Chunking Methods**
-   - Recursive character-based chunking
-   - Semantic clustering
-   - Sentence transformers
-   - Topic-based chunking
-   - Hierarchical chunking
-
-3. **Indexing & Retrieval**
-   - Vector database (ChromaDB)
-   - Embedding models
-   - Query processing
-
-4. **Evaluation Framework**
-   - Metrics calculation
-   - Results analysis
-   - Visualization tools
-
-### Experiment Management
-
-The system includes a comprehensive experiment management layer that handles:
-- Experiment configuration
-- Experiment execution
-- Results storage
-- Report generation
-
-### Data Flow
+The following diagram illustrates the end-to-end flow of how documents are processed, indexed, queried, and evaluated in the system:
 
 ```
-Document Processing → Chunking → Vector Database → Query Pipeline
-                                                        ↓
-Report Generation ← Results Analysis ← Evaluation Framework
+┌─────────────┐     ┌─────────────┐     ┌─────────────────────┐     ┌─────────────┐
+│             │     │             │     │                     │     │             │
+│  PDF Files  │────▶│  Parsing    │────▶│  Chunking Methods   │────▶│  Embedding  │
+│             │     │  (PyPDF)    │     │                     │     │  Generation │
+└─────────────┘     └─────────────┘     └─────────────────────┘     └─────────────┘
+                                          │         │         │            │
+                                          │         │         │            │
+                                          ▼         ▼         ▼            ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────────────┐     ┌─────────────┐
+│             │     │             │     │                     │     │             │
+│  Evaluation │◀────│  Answer     │◀────│  Document Retrieval │◀────│  Vector     │
+│  Framework  │     │  Generation │     │  & Reranking        │     │  Database   │
+│             │     │             │     │                     │     │  (ChromaDB) │
+└─────────────┘     └─────────────┘     └─────────────────────┘     └─────────────┘
+       │                                          ▲                        │
+       │                                          │                        │
+       │                  ┌─────────────┐         │                        │
+       │                  │             │         │                        │
+       └─────────────────▶│  Metrics &  │         │                        │
+                          │  Reports    │         │                        │
+                          │             │         │                        │
+                          └─────────────┘         │                        │
+                                                  │                        │
+                          ┌─────────────┐         │                        │
+                          │             │         │                        │
+                          │  User Query │─────────┘                        │
+                          │             │                                  │
+                          └─────────────┘                                  │
+                                                                           │
+                          ┌─────────────┐                                  │
+                          │             │                                  │
+                          │  Web UI     │◀─────────────────────────────────┘
+                          │  (Streamlit)│
+                          │             │
+                          └─────────────┘
 ```
 
-This architecture enables end-to-end evaluation of chunking methods, from document ingestion to final analysis.
+### Processing Flow
 
-## Key Features
+1. **Document Ingestion**: PDF files are loaded and parsed using PyPDF
+   - Script: `backend/indexing.py`
+   - Method: `IngestionPipeline.load_documents()`
 
-### Advanced Chunking Methods
+2. **Chunking**: Documents are split into chunks using different strategies:
+   - Script: `backend/chunkers/` directory
+   - Methods: Each chunker implements `chunk_document()` method
 
-| Method | Description | Key Parameters |
-|--------|-------------|----------------|
-| **RecursiveCharacter** | Traditional approach that splits text by character count | `chunk_size`, `chunk_overlap` |
-| **SemanticClustering** | Groups sentences by semantic similarity using embeddings and K-means | `max_chunk_size`, `min/max_clusters` |
-| **SentenceTransformers** | Splits by sentences and merges similar ones based on embedding similarity | `max_chunk_size`, `similarity_threshold` |
-| **TopicBased** | Groups content by topics using Latent Dirichlet Allocation | `num_topics`, `max_chunk_size` |
-| **Hierarchical** | Creates a hierarchical structure of chunks based on document structure | `max_chunk_size`, `heading_patterns` |
+3. **Vectorization**: Chunks are converted to vector embeddings using OpenAI or HuggingFace models
+   - Script: `backend/indexing.py`
+   - Method: `IngestionPipeline.index_documents()`
 
-### Comprehensive Evaluation Metrics
+4. **Indexing**: Vectors are stored in ChromaDB collections (one per chunking method)
+   - Script: `backend/indexing.py`
+   - Method: `IngestionPipeline.index_documents()`
 
-- **Semantic Quality**: Semantic similarity, ROUGE scores (ROUGE-1, ROUGE-2, ROUGE-L), BLEU score, F1 score
-- **Retrieval Performance**: Precision@k, Recall@k, Mean Reciprocal Rank (MRR)
-- **Efficiency**: Processing time, memory usage, chunk statistics
+5. **Querying**: User queries are processed, expanded, and used to retrieve relevant documents
+   - Script: `backend/querying.py`
+   - Methods: `QueryPipeline.expand_query()`, `QueryPipeline.retrieve_documents()`
 
-### Experiment Management
+6. **Reranking**: Retrieved documents are reranked for relevance
+   - Script: `backend/querying.py`
+   - Method: `QueryPipeline._initialize_reranker()`
 
-- **Configuration**: JSON-based experiment configuration with parameter customization
-- **Execution**: Parallel experiment execution with progress tracking
-- **Analysis**: Statistical analysis of results with significance testing
-- **Visualization**: Automated generation of publication-quality charts and tables
+7. **Answer Generation**: LLM generates answers based on retrieved context
+   - Script: `backend/querying.py`
+   - Method: `QueryPipeline.generate_summary()`
 
-### Performance Optimization
+8. **Evaluation**: System performance is measured using various metrics
+   - Script: `backend/evaluation/evaluator.py`
+   - Method: `RAGEvaluator.evaluate()`
 
-- **Batch Processing**: Optimized embedding generation with configurable batch sizes
-- **Parallel Processing**: Multi-core utilization for document chunking
-- **Local Embeddings**: Option to use local models for faster development cycles
+9. **Visualization**: Results are presented through the Streamlit web interface
+   - Script: `frontend/app.py`
+   - Method: Main Streamlit application
 
-## Project Structure
+### Chunking Methods in Detail
+
+As this repository is focused on "The Impact of Chunking Methods on Information Retrieval Quality in RAG Systems", the choice and implementation of chunking methods is critical. Here's a detailed overview of the implemented methods:
+
+1. **Recursive Character Chunking** (`recursive_character.py`)
+   - **Approach**: Splits text based on character count with overlap
+   - **Strengths**: Simple, fast, and works with any text
+   - **Weaknesses**: Ignores semantic boundaries, may split mid-sentence or paragraph
+   - **Use case**: Baseline method, good for homogeneous text
+
+2. **Semantic Clustering Chunking** (`semantic_clustering.py`)
+   - **Approach**: Groups sentences by semantic similarity using embeddings
+   - **Strengths**: Creates semantically coherent chunks
+   - **Weaknesses**: Computationally intensive, may create uneven chunk sizes
+   - **Use case**: Documents with varied content where semantic coherence is important
+
+3. **Topic-Based Chunking** (`topic_based.py`)
+   - **Approach**: Identifies topics in the text and chunks around them
+   - **Strengths**: Preserves topical coherence, good for long documents
+   - **Weaknesses**: Topic detection can be imprecise
+   - **Use case**: Long documents with distinct topical sections
+
+4. **Hierarchical Chunking** (`hierarchical.py`)
+   - **Approach**: Respects document structure (headings, sections)
+   - **Strengths**: Preserves document hierarchy, maintains context
+   - **Weaknesses**: Depends on well-structured documents
+   - **Use case**: Formal documents with clear section hierarchy
+
+5. **Sentence Transformers Chunking** (`sentence_transformers.py`)
+   - **Approach**: Uses sentence embeddings to determine chunk boundaries
+   - **Strengths**: Balances semantic coherence with size constraints
+   - **Weaknesses**: Requires good sentence boundary detection
+   - **Use case**: General-purpose chunking with semantic awareness
+
+#### Additional Chunking Methods to Consider
+
+For future work, these additional chunking methods could enhance the system:
+
+1. **Sliding Window with Discourse Markers**
+   - Identifies discourse markers (e.g., "however", "therefore") to create better chunk boundaries
+   - Preserves logical flow and argumentative structure
+
+2. **Entity-Based Chunking**
+   - Groups text around named entities or key concepts
+   - Useful for information extraction and question answering about specific entities
+
+3. **Multi-level Chunking**
+   - Creates a hierarchy of chunks at different granularities
+   - Allows for more flexible retrieval based on query complexity
+
+4. **Adaptive Chunking**
+   - Dynamically adjusts chunk size based on content density and complexity
+   - Smaller chunks for dense, complex content; larger chunks for simpler content
+
+5. **Cross-Document Chunking**
+   - Creates chunks that span multiple documents when they discuss the same topic
+   - Useful for synthesizing information across a corpus
+
+6. **LLM-Guided Chunking**
+   - Uses an LLM to identify natural semantic boundaries
+   - Can create more human-like divisions of text
+
+## Features
+
+- **Multiple Chunking Methods**: Implements various document chunking strategies:
+  - Recursive Character Chunking
+  - Semantic Clustering Chunking
+  - Topic-Based Chunking
+  - Hierarchical Chunking
+  - Sentence Transformers Chunking
+
+- **Vector Database Integration**: Uses ChromaDB for efficient vector storage and retrieval
+
+- **Advanced Retrieval**: Implements query expansion and reranking for improved results
+
+- **Evaluation Framework**: Comprehensive evaluation system with metrics like precision, recall, and more
+
+- **Interactive UI**: Streamlit-based web interface for querying and comparing chunking methods
+
+- **Experiment Management**: Tools for running and analyzing experiments across chunking methods
+
+## Repository Structure
 
 ```
 advanced_ml/
-├── backend/
-│   ├── chunkers/               # Chunking methods
-│   │   ├── base.py             # Base chunker class and factory
-│   │   ├── recursive_character.py
-│   │   ├── semantic_clustering.py
-│   │   ├── sentence_transformers.py
-│   │   ├── topic_based.py
-│   │   └── hierarchical.py
-│   ├── evaluation/             # Evaluation framework
-│   │   ├── metrics.py          # Evaluation metrics
-│   │   ├── evaluator.py        # RAG evaluator
-│   │   └── visualizer.py       # Results visualization
-│   ├── experiments/            # Experiment management
-│   │   ├── config.py           # Experiment configuration
-│   │   ├── runner.py           # Experiment runner
-│   │   └── results.py          # Results storage and analysis
-│   ├── config.py               # System configuration
-│   ├── indexing.py             # Document indexing
-│   ├── querying.py             # Query pipeline
-│   ├── rag_evaluation.py       # RAG evaluation script
-│   └── utils.py                # Utility functions
-├── data/
-│   ├── pdfs/                   # Source documents
-│   ├── db/                     # Vector database
-│   ├── evaluation/             # Evaluation datasets and results
-│   └── thesis/                 # Thesis reports and visualizations
-├── frontend/
-│   └── app.py                  # Streamlit web interface
-├── prompts/                    # Prompt templates
-├── scripts/
-│   ├── run_experiments.py      # Script to run experiments
-│   ├── generate_report.py      # Script to generate thesis report
-│   └── visualize_results.py    # Script to create visualizations
-├── .env                        # Environment variables
-└── requirements.txt            # Dependencies
+├── backend/                  # Core system components
+│   ├── chunkers/             # Chunking methods implementation
+│   │   ├── base.py           # Base chunker class
+│   │   ├── hierarchical.py   # Hierarchical chunking
+│   │   ├── recursive_character.py # Basic recursive character chunking
+│   │   ├── semantic_clustering.py # Semantic clustering chunking
+│   │   ├── sentence_transformers.py # Sentence transformers chunking
+│   │   └── topic_based.py    # Topic-based chunking
+│   ├── evaluation/           # Evaluation framework
+│   │   ├── evaluator.py      # Main evaluation logic
+│   │   ├── metrics.py        # Evaluation metrics
+│   │   └── visualizer.py     # Results visualization
+│   ├── experiments/          # Experiment management
+│   │   ├── config.py         # Experiment configuration
+│   │   ├── results.py        # Results processing
+│   │   └── runner.py         # Experiment runner
+│   ├── config.py             # System configuration
+│   ├── indexing.py           # Document indexing
+│   ├── querying.py           # Query pipeline
+│   └── utils.py              # Utility functions
+├── data/                     # Data directory (gitignored)
+│   ├── db/                   # Vector database files
+│   ├── evaluation/           # Evaluation datasets
+│   ├── pdfs/                 # Source PDF documents
+│   └── experiments/          # Experiment results
+├── frontend/                 # Web interface
+│   └── app.py                # Streamlit application
+├── prompts/                  # Prompt templates
+│   ├── generate_evaluation_set.jinja2 # Evaluation set generation
+│   ├── query_expansion.jinja2 # Query expansion
+│   └── summarize.jinja2      # Document summarization
+├── scripts/                  # Utility scripts
+│   ├── create_collections.py # Create vector collections
+│   ├── generate_report.py    # Generate evaluation reports
+│   ├── run_experiments.py    # Run experiments
+│   ├── visualize_results.py  # Visualize results
+│   ├── evaluation/           # Evaluation scripts
+│   │   ├── run_evaluation.py # Main evaluation script
+│   │   └── run_full_evaluation.py # Full evaluation pipeline
+│   └── utils/                # Utility scripts
+│       └── excel_to_json_converter.py # Convert Excel to JSON
+├── .env_example              # Example environment variables
+├── .gitignore                # Git ignore file
+├── code_organization_plan.md # Code organization documentation
+├── LICENSE                   # MIT License
+├── README.md                 # This file
+├── requirements.txt          # Python dependencies
+└── run_app.sh                # Script to run the application
 ```
 
-## Installation
+## Installation and Setup
+
+### Prerequisites
+
+- Git
+- Miniconda (recommended for environment management)
+
+### Installation Steps
 
 1. Clone the repository:
-```bash
-git clone <repository-url>
-cd advanced_ml
-```
+   ```bash
+   git clone https://github.com/yourusername/advanced_ml.git
+   cd advanced_ml
+   ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+2. Install Miniconda (if not already installed):
 
-3. Create a `.env` file based on `.env_example` and add your API keys:
-```bash
-cp .env_example .env
-# Edit .env to add your API keys
-```
+   **For Windows:**
+   ```
+   # Download the installer
+   curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
+   
+   # Run the installer (GUI will open)
+   # Follow the installation instructions in the GUI
+   ```
+   After installation, open Anaconda Prompt from the Start menu.
+
+   **For macOS:**
+   ```bash
+   # Download the installer
+   curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+   
+   # Make the installer executable
+   chmod +x Miniconda3-latest-MacOSX-x86_64.sh
+   
+   # Run the installer
+   ./Miniconda3-latest-MacOSX-x86_64.sh
+   
+   # Follow the prompts to complete installation
+   # Restart your terminal or run: source ~/.bashrc (or ~/.zshrc)
+   ```
+
+   **For Linux:**
+   ```bash
+   # Download the installer
+   wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+   
+   # Make the installer executable
+   chmod +x Miniconda3-latest-Linux-x86_64.sh
+   
+   # Run the installer
+   ./Miniconda3-latest-Linux-x86_64.sh
+   
+   # Follow the prompts to complete installation
+   # Restart your terminal or run: source ~/.bashrc
+   ```
+
+3. Create and activate a Conda environment:
+   ```bash
+   # Create a new environment with Python 3.11.11
+   conda create -n advanced_ml python=3.11.11
+   
+   # Activate the environment
+   # On Windows (Anaconda Prompt):
+   conda activate advanced_ml
+   
+   # On macOS/Linux:
+   conda activate advanced_ml
+   ```
+
+4. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Create a `.env` file based on the provided `.env_example`:
+   ```bash
+   cp .env_example .env
+   ```
+
+5. Edit the `.env` file to add your API keys and customize settings:
+   - Add your OpenAI API key
+   - Add your LangSmith API key (optional, for tracing)
+   - Adjust model settings if needed
+   - Configure paths and other parameters
 
 ## Usage
 
-The framework supports a complete research workflow from document ingestion to result analysis.
+### Running the Web Interface
 
-### Quick Start
-
-```bash
-# Set up environment
-cp .env_example .env  # Edit to add your API keys
-
-# Ingest documents with default settings
-python -m backend.indexing
-
-# Run default experiment with all chunking methods
-python scripts/run_experiments.py default
-
-# Generate comprehensive report
-python scripts/generate_report.py
-
-# Launch web interface
-streamlit run frontend/app.py
-```
-
-### Core Workflows
-
-#### 1. Document Ingestion
-
-```python
-from backend.indexing import IngestionPipeline
-from backend.config import *
-
-# Configure custom chunking method
-pipeline = IngestionPipeline(
-    pdf_dir=PDF_DIR,
-    db_dir=DB_DIR,
-    db_collection="custom_collection",
-    chunker_name="semantic_clustering",
-    chunker_params={
-        "max_chunk_size": 200,
-        "min_clusters": 2,
-        "max_clusters": 10
-    }
-)
-pipeline.run_pipeline()
-```
-
-#### 2. Experiment Configuration
+The easiest way to use the system is through the web interface:
 
 ```bash
-# Create custom experiment
-python scripts/run_experiments.py create \
-    --name "semantic_comparison" \
-    --chunkers semantic_clustering sentence_transformers \
-    --dataset ./data/evaluation/custom_dataset.json
-
-# Run experiment from configuration
-python scripts/run_experiments.py from-config ./data/evaluation/configs/semantic_comparison.json
+./run_app.sh
 ```
 
-#### 3. Results Analysis
+This script:
+- Sets the correct PYTHONPATH
+- Loads environment variables from the `.env` file
+- Starts the Streamlit application
+
+The web interface allows you to:
+- Enter queries and retrieve relevant documents
+- Compare results from different chunking methods side by side
+- Filter results by document title
+- View highlighted common content between different chunking methods
+
+### Creating Vector Collections
+
+Before querying, you need to create vector collections from your documents:
 
 ```bash
-# Generate visualizations
-python scripts/visualize_results.py --visualization-type radar heatmap bar
-
-# Create comprehensive report
-python scripts/generate_report.py \
-    --results-dir ./data/evaluation/results/semantic_comparison \
-    --output-dir ./data/thesis \
-    --include-metrics semantic_similarity rouge-1 precision@3
+python scripts/create_collections.py
 ```
 
-## Extending the System
+This script processes PDF documents using all available chunking methods and creates a separate vector collection for each method.
 
-The framework is designed for extensibility, allowing researchers to add new components and customize existing ones.
+## Configuration
+
+The system is configured through environment variables in the `.env` file:
+
+### Core Settings
+- `OPENAI_API_KEY`: Your OpenAI API key
+- `CHAT_MODEL`: The OpenAI model to use for chat (default: "gpt-4o-mini")
+- `EMBEDDING_MODEL`: The OpenAI model to use for embeddings (default: "text-embedding-3-small")
+
+### Path Settings
+- `PDF_DIR`: Directory containing PDF documents (default: "./data/pdfs")
+- `DB_DIR`: Directory for vector database (default: "./data/db")
+- `DB_COLLECTION`: Default collection name (default: "rag_collection_advanced")
+- `DATA_DIR`: Base data directory (default: "./data")
+
+### Chunking Settings
+- `CHUNK_SIZE`: Default chunk size in characters (default: 1000)
+- `CHUNK_OVERLAP`: Default chunk overlap in characters (default: 200)
+- `ADVANCED_CHUNKING`: Use advanced chunking methods (default: true)
+
+### LangSmith Settings (Optional)
+- `LANGSMITH_API_KEY`: Your LangSmith API key
+- `LANGSMITH_PROJECT`: LangSmith project name (default: "advanced_ml")
+- `LANGCHAIN_TRACING_V2`: Enable LangChain tracing (default: true)
+- `LANGCHAIN_ENDPOINT`: LangSmith API endpoint
+
+### Performance Settings
+- `USE_LOCAL_EMBEDDINGS`: Use local HuggingFace embeddings instead of OpenAI (default: false)
+- `MIN_COMMON_WORDS`: Minimum consecutive words for highlighting common sequences (default: 5)
+
+## Development
+
+### Project Structure Overview
+
+The project follows a modular structure:
+
+- **Backend**: Core system components
+  - `chunkers/`: Different chunking strategies
+  - `evaluation/`: Evaluation framework
+  - `experiments/`: Experiment management
+  - `config.py`: System configuration
+  - `indexing.py`: Document ingestion and indexing
+  - `querying.py`: Query processing and retrieval
+
+- **Frontend**: User interface
+  - `app.py`: Streamlit application
+
+- **Scripts**: Utility scripts for various tasks
+  - `create_collections.py`: Create vector collections
+  - `run_experiments.py`: Run experiments
+  - `generate_report.py`: Generate evaluation reports
 
 ### Adding a New Chunking Method
 
+To add a new chunking method:
+
+1. Create a new file in `backend/chunkers/` (e.g., `new_chunker.py`)
+2. Implement a class that inherits from `BaseChunker` in `backend/chunkers/base.py`
+3. Implement the required methods, especially `chunk_document()`
+4. Register your chunker in the chunker factory
+
+Example:
 ```python
-# 1. Create a new chunker class in backend/chunkers/custom_chunker.py
-from typing import List
-from langchain.schema import Document
 from backend.chunkers.base import BaseChunker
 
-class CustomChunker(BaseChunker):
-    """
-    Custom chunking method that implements a novel approach.
-    """
-    def __init__(self, custom_param: int = 100, **kwargs):
-        super().__init__(custom_param=custom_param, **kwargs)
-        self.custom_param = custom_param
+class NewChunker(BaseChunker):
+    """New chunking method implementation."""
     
-    def chunk_documents(self, docs: List[Document]) -> List[Document]:
+    def __init__(self, chunk_size=1000, chunk_overlap=200):
+        super().__init__(chunk_size, chunk_overlap)
+        
+    def chunk_document(self, document):
         # Implement your chunking logic here
         chunks = []
-        # Process documents according to your algorithm
+        # ...
         return chunks
-
-# 2. Register the chunker in backend/chunkers/__init__.py
-from backend.chunkers.custom_chunker import CustomChunker
-ChunkerFactory.register("custom_chunker", CustomChunker)
 ```
 
-### Adding a New Evaluation Metric
+## Evaluation
 
-```python
-# In backend/evaluation/metrics.py
-def calculate_custom_metric(generated_answer: str, reference_answer: str) -> float:
-    """
-    Calculate a custom evaluation metric.
-    
-    Args:
-        generated_answer (str): The answer generated by the system
-        reference_answer (str): The reference (ground truth) answer
-        
-    Returns:
-        float: The metric score
-    """
-    # Implement your metric calculation
-    score = ...
-    return score
+The system includes a comprehensive evaluation framework to assess the quality of different chunking methods.
 
-# Update the calculate_all_metrics function
-def calculate_all_metrics(...):
-    # Add your metric to the results
-    metrics['custom_metric'] = calculate_custom_metric(
-        generated_answer, reference_answer
-    )
-    return metrics
+### Running Evaluations
+
+To run a full evaluation:
+
+```bash
+python scripts/evaluation/run_full_evaluation.py
 ```
 
-## Performance Optimization
+This script:
+1. Converts Excel evaluation data to JSON format
+2. Runs evaluation on all chunking methods
+3. Generates comparison reports
 
-The framework implements several optimization techniques to efficiently process large document collections:
+### Generating Reports
 
-| Technique | Implementation | Performance Impact |
-|-----------|----------------|-------------------|
-| **Batch Processing** | Processes embeddings in configurable batches (default: 32) | 3-5x faster embedding generation |
-| **Parallel Processing** | Uses `ProcessPoolExecutor` for CPU-bound chunking tasks | Near-linear scaling with CPU cores |
-| **Local Embeddings** | Option to use HuggingFace models instead of API calls | Eliminates API latency during development |
-| **Optimized Vector Storage** | ChromaDB with efficient indexing | Fast similarity search for large collections |
+To generate evaluation reports:
 
-### Configuration Options
-
-Performance can be tuned through environment variables and configuration parameters:
-
-```python
-# Environment variables
-USE_LOCAL_EMBEDDINGS=true  # Use local embedding models
-CHUNK_SIZE=1000            # Set default chunk size
-CHUNK_OVERLAP=200          # Set default chunk overlap
-
-# Runtime configuration
-pipeline = IngestionPipeline(
-    # ... other parameters ...
-    chunker_params={
-        "embedding_model_name": "sentence-transformers/paraphrase-MiniLM-L3-v2",  # Faster model
-        "batch_size": 64  # Larger batch size for faster processing
-    }
-)
+```bash
+python scripts/generate_report.py
 ```
 
-## Research Applications
+### Visualizing Results
 
-This framework enables several types of research investigations:
+To visualize evaluation results:
 
-1. **Comparative Analysis**: Systematically compare different chunking methods across various document types and retrieval tasks
-2. **Parameter Optimization**: Identify optimal parameters for each chunking method based on document characteristics
-3. **Domain-Specific Tuning**: Evaluate which chunking methods perform best for specific domains (legal, medical, technical, etc.)
-4. **Efficiency Studies**: Analyze the trade-offs between retrieval quality and computational efficiency
+```bash
+python scripts/visualize_results.py
+```
+
+## Contributing
+
+Contributions are welcome! Here's how you can contribute:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin feature/your-feature-name`
+5. Submit a pull request
+
+### Coding Standards
+
+- Follow PEP 8 style guidelines
+- Write docstrings for all functions, classes, and methods
+- Add type hints where appropriate
+- Write unit tests for new functionality
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Citation
+## Author
 
-If you use this framework in your research, please cite:
-
-```
-@misc{AdvancedRAGSystem2025,
-  author = {Your Name},
-  title = {Advanced RAG System for Chunking Methods Research},
-  year = {2025},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/yourusername/advanced_ml}}
-}
-```
+**Nikola Bijanic**  
+- Email: nikolabijanic@yahoo.com  
+- GitHub: [@MrOiseau](https://github.com/MrOiseau)  
+- LinkedIn: [Nikola Bijanic](https://www.linkedin.com/in/nikola-bijanic/)
 
 ## Acknowledgments
 
-This project was developed as part of a master thesis research on "The Impact of Chunking Methods on Information Retrieval Quality in RAG Systems."
+- This project was developed as part of a university master thesis
+- Uses OpenAI models for embeddings and generation
+- Built with LangChain, ChromaDB, and Streamlit

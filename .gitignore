@@ -172,3 +172,10 @@ __pycache__/
 db/
 data/
 
+
+# Preparing evaluation test set: 
+# - cut out irrelevant parts of pdfs, 
+# - preparing evaluation test set - expand excerpts from all in one excel cell to a chunk = 1 cell,
+# - extract document titles - to download specific evaluation reports that are used for creating evaluation test set
+# - modify json metadata - filter out only needed metadata
+scripts/data_preparation

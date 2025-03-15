@@ -112,15 +112,25 @@ class QueryPipeline:
         # Initialize base retriever
         self.base_retriever = self.vectorstore.as_retriever(search_kwargs={"k": self.search_results_num})
 
-        # Initialize reranker if enabled
-        if self.rerank:
-            self.reranker = self._initialize_reranker()
-            self.retriever = ContextualCompressionRetriever(
-                base_compressor=self.reranker,
-                base_retriever=self.base_retriever
-            )
-        else:
+        # Check if reranking should be disabled based on environment variable
+        rerank_env = os.getenv("RERANK", "true").lower() == "true"
+        self.rerank = self.rerank and rerank_env
+        
+        if not self.rerank:
             self.retriever = self.base_retriever
+            logger.info("Reranker disabled (either by parameter or environment variable)")
+        else:
+            try:
+                reranker = self._initialize_reranker()
+                self.retriever = ContextualCompressionRetriever(
+                    base_compressor=reranker,
+                    base_retriever=self.base_retriever
+                )
+                logger.info("Reranker initialized and enabled")
+            except Exception as e:
+                logger.error(f"Error initializing reranker: {e}. Falling back to base retriever.")
+                self.rerank = False
+                self.retriever = self.base_retriever
 
         logger.info("Query pipeline initialization completed")
 
@@ -182,12 +192,24 @@ class QueryPipeline:
             Chroma: Initialized vector store.
         """
         try:
-            vectorstore = Chroma(
-                persist_directory=self.db_dir,
-                embedding_function=self.embeddings,
-                collection_name=self.db_collection,
-            )
-            logger.info(f"Connected to Chroma vector store at {self.db_dir} with collection {self.db_collection}")
+            # Check if the collection is one of the WFP collections
+            if self.db_collection.startswith("wfp_collection_"):
+                # Use the collection-specific directory
+                collection_dir = os.path.join(self.db_dir, self.db_collection)
+                vectorstore = Chroma(
+                    persist_directory=collection_dir,
+                    embedding_function=self.embeddings,
+                    collection_name=self.db_collection,
+                )
+                logger.info(f"Connected to Chroma vector store at {collection_dir} with collection {self.db_collection}")
+            else:
+                # Use the standard approach for other collections
+                vectorstore = Chroma(
+                    persist_directory=self.db_dir,
+                    embedding_function=self.embeddings,
+                    collection_name=self.db_collection,
+                )
+                logger.info(f"Connected to Chroma vector store at {self.db_dir} with collection {self.db_collection}")
             return vectorstore
         except Exception as e:
             logger.error(f"Error initializing Chroma vector store: {e}")
@@ -280,19 +302,13 @@ class QueryPipeline:
             if metadata_filter:
                 search_kwargs["filter"] = metadata_filter
 
-            # Create a base retriever with updated search_kwargs
-            base_retriever = self.vectorstore.as_retriever(search_kwargs=search_kwargs)
-
-            if self.rerank:
-                retriever = ContextualCompressionRetriever(
-                    base_compressor=self.reranker,
-                    base_retriever=base_retriever
-                )
-            else:
-                retriever = base_retriever
-
+            # Use the existing retriever (which might be a base retriever or a contextual compression retriever)
+            # but update its search parameters if needed
+            if hasattr(self.retriever, "search_kwargs"):
+                self.retriever.search_kwargs.update(search_kwargs)
+            
             # Use invoke instead of deprecated method
-            docs = retriever.invoke(query, **search_kwargs)
+            docs = self.retriever.invoke(query)
             logger.info(f"Retrieved {len(docs)} documents")
             return docs
         except Exception as e:
@@ -506,6 +522,10 @@ def main() -> None:
             logger.error(str(e))
             sys.exit(1)  # Exit with error code
 
+        # Get rerank setting from environment variable
+        rerank = os.getenv("RERANK", "true").lower() == "true"
+        logger.debug(f"RERANK: {rerank}")
+
         # Initialize the pipeline
         pipeline = QueryPipeline(
             db_dir=DB_DIR,
@@ -516,7 +536,7 @@ def main() -> None:
             search_results_num=SEARCH_RESULTS_NUM,
             langsmith_project=LANGSMITH_PROJECT,
             query_expansion=True,
-            rerank=True,
+            rerank=rerank,
         )
 
         # Example query run with a specific question about transformers
