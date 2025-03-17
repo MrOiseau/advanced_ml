@@ -10,6 +10,7 @@ import os
 import sys
 import argparse
 import json
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -185,7 +186,6 @@ def create_line_chart(
     plt.savefig(os.path.join(output_dir, "line_charts", "metrics_line.png"), dpi=dpi)
     plt.close()
 
-
 def create_radar_chart(
     metrics_df: pd.DataFrame,
     include_metrics: List[str],
@@ -209,6 +209,10 @@ def create_radar_chart(
     if not metrics:
         print("No valid metrics found for radar chart")
         return
+    
+    # Print available metrics for debugging
+    print(f"Available metrics for radar chart: {metrics}")
+    print(f"Metrics DataFrame columns: {metrics_df.columns.tolist()}")
     
     # Normalize metrics to 0-1 scale
     normalized_df = metrics_df.copy()
@@ -240,10 +244,29 @@ def create_radar_chart(
     
     # Draw the chart for each chunker
     for chunker in chunkers:
-        values = normalized_df[normalized_df["Chunker"] == chunker][metrics].values.flatten().tolist()
-        values += values[:1]  # Close the loop
-        ax.plot(angles, values, linewidth=2, label=chunker)
-        ax.fill(angles, values, alpha=0.1)
+        # Get values for this chunker
+        chunker_df = normalized_df[normalized_df["Chunker"] == chunker]
+        
+        # Check if we have data for this chunker
+        if chunker_df.empty:
+            print(f"No data for chunker {chunker}, skipping")
+            continue
+        
+        # Get values for the metrics
+        try:
+            values = chunker_df[metrics].values.flatten().tolist()
+            
+            # Check if values has the right length
+            if len(values) != len(metrics):
+                print(f"Warning: Values for chunker {chunker} has length {len(values)}, expected {len(metrics)}. Skipping.")
+                continue
+                
+            values += values[:1]  # Close the loop
+            ax.plot(angles, values, linewidth=2, label=chunker)
+            ax.fill(angles, values, alpha=0.1)
+        except Exception as e:
+            print(f"Error plotting chunker {chunker}: {e}")
+            continue
     
     plt.title("Normalized Metrics by Chunking Method", fontsize=16)
     plt.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
@@ -251,6 +274,7 @@ def create_radar_chart(
     
     # Save figure
     plt.savefig(os.path.join(output_dir, "radar_charts", "metrics_radar.png"), dpi=dpi)
+    plt.close()
     plt.close()
 
 
@@ -289,7 +313,8 @@ def create_heatmap(
             normalized_df[metric] = 0
     
     # Create pivot table for heatmap
-    pivot_df = normalized_df.pivot(index="Chunker", columns=None, values=metrics)
+    # Instead of using pivot, we'll just set the index to "Chunker" and select the metrics columns
+    pivot_df = normalized_df.set_index("Chunker")[metrics]
     
     plt.figure(figsize=tuple(figsize))
     sns.heatmap(
@@ -411,15 +436,15 @@ def visualize_results(args):
     # Create output directory if it doesn't exist
     os.makedirs(args.output_dir, exist_ok=True)
     
-    # Load results
-    storage = ResultsStorage(results_dir=args.results_dir)
-    results = storage.load_all_results()
+    # Load results directly from JSON files
+    results = []
+    json_files = [f for f in os.listdir(args.results_dir) if f.endswith('.json')]
     
-    if not results:
+    if not json_files:
         print("No results found.")
         return
     
-    print(f"Found {len(results)} experiment results.")
+    print(f"Found {len(json_files)} experiment results.")
     
     # Create analyzer and visualizer
     visualizer = ResultsVisualizer(results_dir=args.results_dir)
@@ -428,12 +453,27 @@ def visualize_results(args):
     metrics_data = []
     efficiency_data = []
     
-    for result in results:
-        experiment_name = result.get("experiment_name", "Unknown")
-        chunker_name = result.get("chunker_name", "Unknown")
-        avg_metrics = result.get("average_metrics", {})
-        timing_data = result.get("timing_data", {})
-        chunk_data = result.get("chunk_data", {})
+    for json_file in json_files:
+        file_path = os.path.join(args.results_dir, json_file)
+        try:
+            with open(file_path, 'r') as f:
+                result = json.load(f)
+            
+            # Handle the case where the result might be a list
+            if isinstance(result, list):
+                print(f"Warning: Result in {json_file} is a list, not a dictionary. Skipping.")
+                continue
+            
+            results.append(result)
+            
+            experiment_name = result.get("experiment_name", "Unknown")
+            chunker_name = result.get("chunker_name", "Unknown")
+            avg_metrics = result.get("average_metrics", {})
+            timing_data = result.get("timing_data", {})
+            chunk_data = result.get("chunk_data", {})
+        except Exception as e:
+            print(f"Error loading {json_file}: {e}")
+            continue
         
         # Metrics data
         metrics_row = {

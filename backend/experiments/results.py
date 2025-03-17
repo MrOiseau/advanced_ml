@@ -14,22 +14,7 @@ from typing import List, Dict, Any, Optional, Union, Tuple
 from datetime import datetime
 
 
-class NumpyEncoder(json.JSONEncoder):
-    """
-    Custom JSON encoder for NumPy types.
-    
-    This encoder converts NumPy types to their Python equivalents
-    so they can be properly serialized to JSON.
-    """
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super(NumpyEncoder, self).default(obj)
-
+from backend.utils import NumpyEncoder
 from backend.evaluation.visualizer import ResultsVisualizer
 
 

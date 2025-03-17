@@ -188,7 +188,7 @@ class ExperimentConfig:
         
         config.add_chunker(
             chunker_name="sentence_transformers",
-            chunker_params={"max_chunk_size": 200, "similarity_threshold": 0.6},
+            chunker_params={"max_chunk_size": 200, "similarity_threshold": 0.75},
             experiment_name="sentence_transformers_default"
         )
         

@@ -1,6 +1,7 @@
 import logging
 import os
 import json
+import numpy as np
 from typing import Optional, List, Dict, Any, Tuple, Set
 
 def setup_logging(name: Optional[str] = None, log_level: int = logging.INFO, log_file: Optional[str] = None) -> logging.Logger:
@@ -65,6 +66,24 @@ def remove_duplicates(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             unique_entries.append(entry)
 
     return unique_entries
+
+
+class NumpyEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for NumPy types.
+    
+    This encoder converts NumPy types to their Python equivalents
+    so they can be properly serialized to JSON.
+    """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NumpyEncoder, self).default(obj)
+
 
 if __name__ == "__main__":
     # Setup logger

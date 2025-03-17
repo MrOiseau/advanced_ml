@@ -2,7 +2,8 @@
 SentenceTransformersSplitter module for the RAG system.
 
 This module implements the SentenceTransformersSplitter class, which splits
-documents by sentences and uses embeddings to merge similar sentences.
+documents by sentences and uses embeddings to merge similar sentences,
+with an improved sliding window approach for better context awareness.
 """
 
 import numpy as np
@@ -27,14 +28,16 @@ class SentenceTransformersSplitter(BaseChunker):
     
     This chunker first splits documents into sentences, then computes embeddings for each sentence,
     and finally merges sentences based on their semantic similarity until a maximum chunk size
-    is reached.
+    is reached. It uses a sliding window approach to maintain better context awareness.
     """
     
     def __init__(
         self,
-        embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model_name: str = "BAAI/bge-small-en-v1.5",
         max_chunk_size: int = 200,
-        similarity_threshold: float = 0.6,
+        similarity_threshold: float = 0.75,
+        window_size: int = 3,  # Size of sliding window for context
+        adaptive_threshold: bool = True,  # Whether to use adaptive thresholds
         **kwargs
     ):
         """
@@ -44,18 +47,24 @@ class SentenceTransformersSplitter(BaseChunker):
             embedding_model_name (str): The sentence-transformers model name.
             max_chunk_size (int): Maximum number of words in a single chunk.
             similarity_threshold (float): Threshold for merging sentences (0.0 to 1.0).
+            window_size (int): Number of recent sentences to consider for context.
+            adaptive_threshold (bool): Whether to adapt threshold based on content.
             **kwargs: Additional arguments to pass to the parent class.
         """
         super().__init__(
             embedding_model_name=embedding_model_name,
             max_chunk_size=max_chunk_size,
             similarity_threshold=similarity_threshold,
+            window_size=window_size,
+            adaptive_threshold=adaptive_threshold,
             **kwargs
         )
         
         self.embedding_model = SentenceTransformer(embedding_model_name)
         self.max_chunk_size = max_chunk_size
         self.similarity_threshold = similarity_threshold
+        self.window_size = window_size
+        self.adaptive_threshold = adaptive_threshold
     
     def chunk_documents(self, docs: List[Document]) -> List[Document]:
         """
@@ -99,7 +108,8 @@ class SentenceTransformersSplitter(BaseChunker):
         metadata: Dict[str, Any]
     ) -> List[Document]:
         """
-        Merge similar sentences into chunks based on semantic similarity.
+        Merge similar sentences into chunks based on semantic similarity,
+        using a sliding window approach for better context awareness.
         
         Args:
             sentences (List[str]): List of sentences to merge.
@@ -121,19 +131,35 @@ class SentenceTransformersSplitter(BaseChunker):
         current_chunk_words += len(sentences[0].split())
         processed = [0]
         
+        # Calculate adaptive threshold if enabled
+        if self.adaptive_threshold:
+            # Calculate average similarity between adjacent sentences
+            adjacent_similarities = [similarities[i, i+1] for i in range(len(sentences)-1)]
+            avg_similarity = np.mean(adjacent_similarities) if adjacent_similarities else 0.5
+            # Adjust threshold based on document characteristics
+            # Lower threshold for documents with lower average similarity
+            adjusted_threshold = max(0.4, min(0.8, avg_similarity * 0.9))
+            threshold = adjusted_threshold
+        else:
+            threshold = self.similarity_threshold
+        
         while len(processed) < len(sentences):
             # Find the most similar unprocessed sentence to any sentence in the current chunk
+            # using a sliding window of the most recent sentences for better context
             max_similarity = -1
             next_sentence_idx = -1
             
-            for i in processed:
+            # Consider only the most recent window_size sentences in the current chunk
+            window_start = max(0, len(processed) - self.window_size)
+            
+            for i in processed[window_start:]:
                 for j in range(len(sentences)):
                     if j not in processed and similarities[i, j] > max_similarity:
                         max_similarity = similarities[i, j]
                         next_sentence_idx = j
             
             # If we found a similar sentence and it's above the threshold
-            if max_similarity >= self.similarity_threshold:
+            if max_similarity >= threshold:
                 next_sentence = sentences[next_sentence_idx]
                 next_sentence_words = len(next_sentence.split())
                 

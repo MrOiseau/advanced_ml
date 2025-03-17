@@ -164,7 +164,7 @@ class QueryPipeline:
                 from langchain_huggingface import HuggingFaceEmbeddings
                 logger.info("Using local HuggingFace embeddings model")
                 embeddings = HuggingFaceEmbeddings(
-                    model_name="sentence-transformers/all-MiniLM-L6-v2"
+                    model_name="BAAI/bge-small-en-v1.5"
                 )
                 return embeddings
             except ImportError:

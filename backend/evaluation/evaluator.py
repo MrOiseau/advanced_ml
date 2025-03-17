@@ -23,7 +23,7 @@ from backend.evaluation.metrics import (
     calculate_semantic_similarity,
     calculate_exact_match,
 )
-from backend.experiments.results import NumpyEncoder
+from backend.utils import NumpyEncoder
 
 
 class RAGEvaluator:
@@ -51,7 +51,7 @@ class RAGEvaluator:
             output_dir (str): Directory to save evaluation results.
         """
         self.dataset = self.load_dataset(dataset_path)
-        self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.sentence_model = SentenceTransformer('BAAI/bge-small-en-v1.5')
         self.query_pipeline = query_pipeline
         self.chunker = chunker
         self.output_dir = output_dir

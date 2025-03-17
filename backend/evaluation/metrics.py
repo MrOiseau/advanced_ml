@@ -150,7 +150,7 @@ def calculate_semantic_similarity(
         float: The semantic similarity score.
     """
     if model is None:
-        model = SentenceTransformer('all-MiniLM-L6-v2')
+        model = SentenceTransformer('BAAI/bge-small-en-v1.5')
     
     gen_embedding = model.encode([generated_answer], convert_to_tensor=True)
     ref_embedding = model.encode([reference_answer], convert_to_tensor=True)

@@ -2,13 +2,13 @@
 TopicBasedChunker module for the RAG system.
 
 This module implements the TopicBasedChunker class, which uses
-Latent Dirichlet Allocation (LDA) to group content by topics.
+BERTopic to group content by topics, replacing the previous
+Latent Dirichlet Allocation (LDA) implementation.
 """
 
 import numpy as np
 from typing import List, Dict, Any, Optional
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
+from bertopic import BERTopic
 import nltk
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import stopwords
@@ -26,10 +26,13 @@ except LookupError:
 
 class TopicBasedChunker(BaseChunker):
     """
-    A chunker that uses Latent Dirichlet Allocation (LDA) to group content by topics.
+    A chunker that uses BERTopic to group content by topics.
     
-    This chunker first splits documents into sentences, then applies LDA to group
+    This chunker first splits documents into sentences, then applies BERTopic to group
     sentences by topic, and finally forms chunks based on topic assignments.
+    
+    BERTopic is more effective than LDA for shorter texts like sentences, as it uses
+    transformer-based embeddings that better capture semantic meaning.
     """
     
     def __init__(
@@ -39,6 +42,7 @@ class TopicBasedChunker(BaseChunker):
         min_topic_prob: float = 0.3,
         random_state: int = 42,
         language: str = 'english',
+        preserve_order: bool = True,
         **kwargs
     ):
         """
@@ -50,6 +54,7 @@ class TopicBasedChunker(BaseChunker):
             min_topic_prob (float): Minimum probability for a sentence to belong to a topic.
             random_state (int): For reproducible results.
             language (str): Language for stopwords removal.
+            preserve_order (bool): Whether to preserve the original order of sentences within topics.
             **kwargs: Additional arguments to pass to the parent class.
         """
         super().__init__(
@@ -58,6 +63,7 @@ class TopicBasedChunker(BaseChunker):
             min_topic_prob=min_topic_prob,
             random_state=random_state,
             language=language,
+            preserve_order=preserve_order,
             **kwargs
         )
         
@@ -66,11 +72,20 @@ class TopicBasedChunker(BaseChunker):
         self.min_topic_prob = min_topic_prob
         self.random_state = random_state
         self.language = language
+        self.preserve_order = preserve_order
         self.stop_words = set(stopwords.words(language))
+        
+        # Initialize BERTopic model
+        self.topic_model = BERTopic(
+            nr_topics=num_topics,
+            calculate_probabilities=True,
+            verbose=True
+            # random_state parameter is not supported by BERTopic
+        )
     
     def chunk_documents(self, docs: List[Document]) -> List[Document]:
         """
-        Chunk documents by grouping sentences by topic.
+        Chunk documents by grouping sentences by topic using BERTopic.
         
         Args:
             docs (List[Document]): List of Document objects to be chunked.
@@ -93,79 +108,90 @@ class TopicBasedChunker(BaseChunker):
                 all_chunks.append(Document(page_content=text, metadata=doc.metadata))
                 continue
             
-            # Create a document-term matrix
-            vectorizer = CountVectorizer(
-                stop_words=self.stop_words,
-                min_df=2,  # Ignore terms that appear in less than 2 sentences
-                max_df=0.9  # Ignore terms that appear in more than 90% of sentences
-            )
-            
             try:
-                X = vectorizer.fit_transform(sentences)
+                # Apply BERTopic to sentences
+                topics, probs = self.topic_model.fit_transform(sentences)
                 
-                # Check if we have enough features for topic modeling
-                if X.shape[1] < 5:  # Not enough features
-                    all_chunks.append(Document(page_content=text, metadata=doc.metadata))
-                    continue
+                # Group sentences by topic, preserving original indices
+                topic_sentences = {}
+                sentence_indices = {}  # To preserve original order
                 
-                # Apply LDA
-                lda = LatentDirichletAllocation(
-                    n_components=min(self.num_topics, len(sentences) - 1),
-                    random_state=self.random_state,
-                    max_iter=10
-                )
+                for i, (sentence, topic) in enumerate(zip(sentences, topics)):
+                    if topic not in topic_sentences:
+                        topic_sentences[topic] = []
+                        sentence_indices[topic] = []
+                    
+                    topic_sentences[topic].append(sentence)
+                    sentence_indices[topic].append(i)
                 
-                # Get topic distributions for each sentence
-                sentence_topics = lda.fit_transform(X)
-                
-                # Group sentences by dominant topic
-                topic_sentences = self._group_by_topic(sentences, sentence_topics)
-                
-                # Create chunks from topic groups
-                for topic_idx, topic_sents in topic_sentences.items():
+                # Create chunks from topic groups, preserving original order if needed
+                for topic, topic_sents in topic_sentences.items():
+                    if self.preserve_order:
+                        # Sort sentences within each topic by their original position
+                        sorted_pairs = sorted(zip(sentence_indices[topic], topic_sents))
+                        topic_sents = [sent for _, sent in sorted_pairs]
+                    
                     chunks = self._create_chunks_from_sentences(topic_sents, doc.metadata)
                     all_chunks.extend(chunks)
                 
             except Exception as e:
-                print(f"Error in topic modeling: {e}")
-                # Fallback to treating the whole document as one chunk
-                all_chunks.append(Document(page_content=text, metadata=doc.metadata))
+                import traceback
+                error_details = traceback.format_exc()
+                print(f"Error in topic modeling: {e}\nDetails: {error_details}")
+                
+                # Add error information to metadata
+                error_metadata = doc.metadata.copy()
+                error_metadata["chunking_error"] = str(e)
+                error_metadata["chunking_fallback"] = "simple_paragraphs"
+                
+                # More intelligent fallback: try paragraph-based chunking instead of one big chunk
+                try:
+                    # Split by paragraphs (double newlines)
+                    paragraphs = text.split("\n\n")
+                    
+                    # Process each paragraph
+                    for para in paragraphs:
+                        if not para.strip():
+                            continue
+                            
+                        para_words = len(para.split())
+                        
+                        # If paragraph fits in chunk size, add it directly
+                        if para_words <= self.max_chunk_size:
+                            all_chunks.append(Document(page_content=para, metadata=error_metadata))
+                        else:
+                            # Otherwise, split into sentences
+                            para_sentences = sent_tokenize(para)
+                            current_chunk = []
+                            current_chunk_words = 0
+                            
+                            for sentence in para_sentences:
+                                sentence_words = len(sentence.split())
+                                
+                                if current_chunk_words + sentence_words <= self.max_chunk_size:
+                                    current_chunk.append(sentence)
+                                    current_chunk_words += sentence_words
+                                else:
+                                    # Create a chunk with the current sentences
+                                    if current_chunk:
+                                        chunk_text = " ".join(current_chunk).strip()
+                                        all_chunks.append(Document(page_content=chunk_text, metadata=error_metadata))
+                                    
+                                    # Start a new chunk with this sentence
+                                    current_chunk = [sentence]
+                                    current_chunk_words = sentence_words
+                            
+                            # Add the last chunk if there's anything left
+                            if current_chunk:
+                                chunk_text = " ".join(current_chunk).strip()
+                                all_chunks.append(Document(page_content=chunk_text, metadata=error_metadata))
+                
+                except Exception as fallback_error:
+                    print(f"Fallback chunking also failed: {fallback_error}. Using document as single chunk.")
+                    # Ultimate fallback: treat the whole document as one chunk
+                    all_chunks.append(Document(page_content=text, metadata=error_metadata))
         
         return all_chunks
-    
-    def _group_by_topic(
-        self, 
-        sentences: List[str], 
-        sentence_topics: np.ndarray
-    ) -> Dict[int, List[str]]:
-        """
-        Group sentences by their dominant topic.
-        
-        Args:
-            sentences (List[str]): List of sentences.
-            sentence_topics (np.ndarray): Topic distributions for each sentence.
-            
-        Returns:
-            Dict[int, List[str]]: Dictionary mapping topic indices to lists of sentences.
-        """
-        topic_sentences = {}
-        
-        for i, (sentence, topic_dist) in enumerate(zip(sentences, sentence_topics)):
-            # Get the dominant topic for this sentence
-            dominant_topic = np.argmax(topic_dist)
-            dominant_prob = topic_dist[dominant_topic]
-            
-            # Only assign if the probability is above the threshold
-            if dominant_prob >= self.min_topic_prob:
-                if dominant_topic not in topic_sentences:
-                    topic_sentences[dominant_topic] = []
-                topic_sentences[dominant_topic].append(sentence)
-            else:
-                # For sentences without a clear topic, create a separate "topic"
-                misc_topic = len(sentence_topics[0]) + i  # Ensure unique topic ID
-                topic_sentences[misc_topic] = [sentence]
-        
-        return topic_sentences
     
     def _create_chunks_from_sentences(
         self, 

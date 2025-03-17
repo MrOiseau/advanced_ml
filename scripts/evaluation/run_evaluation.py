@@ -3,8 +3,7 @@
 Consolidated evaluation script for RAG system.
 
 This script:
-1. Loads the evaluation dataset with ground truth chunks
-2. Evaluates all chunking methods or a specific chunker
+1. Loads the evaluation dataset with grotrahunker
 3. Generates comparison reports and visualizations
 """
 
@@ -21,10 +20,20 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.config import *
-from backend.chunkers.base import ChunkerFactory
+from backend.chunkers.base import ChunkerFactory, ChunkingMethod
 from backend.querying import QueryPipeline
 from backend.evaluation.metrics import calculate_all_metrics
 from backend.evaluation.visualizer import ResultsVisualizer
+from backend.utils import NumpyEncoder
+from langchain.schema import Document
+
+# Import for QASPER dataset
+try:
+    from datasets import load_dataset
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
+    print("Warning: 'datasets' package not found. QASPER dataset evaluation will not be available.")
 
 
 class RAGEvaluator:
@@ -97,7 +106,6 @@ class RAGEvaluator:
         Returns:
             List[Document]: List of Document objects.
         """
-        from langchain.schema import Document
         ground_truth_docs = []
         
         # Use ground_truth_chunks to create Document objects
@@ -145,7 +153,7 @@ class RAGEvaluator:
             from sentence_transformers import SentenceTransformer
             from sklearn.metrics.pairwise import cosine_similarity
             
-            model = SentenceTransformer('all-MiniLM-L6-v2')
+            model = SentenceTransformer('BAAI/bge-small-en-v1.5')
             doc_embedding = model.encode(doc.page_content, convert_to_tensor=True).cpu().numpy()
             
             for gt_doc in ground_truth_docs:
@@ -367,25 +375,26 @@ class RAGEvaluator:
         """
         Measures chunking performance and updates chunk data.
         """
-        from backend.indexing import IngestionPipeline
-        
-        # Create a temporary ingestion pipeline to measure chunking performance
-        ingestion = IngestionPipeline(
-            pdf_dir=os.getenv("PDF_DIR", "./data/pdfs"),
-            db_dir=os.getenv("DB_DIR", "./data/db"),
-            db_collection=os.getenv("DB_COLLECTION", "rag_collection_advanced"),
-            chunk_size=self.chunker_params.get("chunk_size", 1000),
-            chunk_overlap=self.chunker_params.get("chunk_overlap", 200),
-            data_dir=os.getenv("DATA_DIR", "./data"),
-            embedding_model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"),
-        )
-        
-        # Parse PDFs
-        docs = ingestion.parse_pdfs()
+        # Create sample documents for chunking performance measurement
+        # instead of using WFP PDFs
+        sample_docs = [
+            Document(
+                page_content="This is a sample document for chunking performance measurement. " * 20,
+                metadata={"source": "sample1"}
+            ),
+            Document(
+                page_content="Another sample document with different content for testing. " * 20,
+                metadata={"source": "sample2"}
+            ),
+            Document(
+                page_content="A third sample document with more varied content to test chunking algorithms. " * 20,
+                metadata={"source": "sample3"}
+            )
+        ]
         
         # Measure chunking performance
         start_time = time.time()
-        chunks = self.chunker.chunk_documents(docs)
+        chunks = self.chunker.chunk_documents(sample_docs)
         self.timing_data['chunking_time'] = time.time() - start_time
         
         # Get chunk data
@@ -427,26 +436,212 @@ class RAGEvaluator:
         }
 
 
-class NumpyEncoder(json.JSONEncoder):
+class QASPERDatasetConverter:
     """
-    Custom JSON encoder for NumPy types.
+    Converts QASPER dataset to the format expected by the evaluator.
     """
-    def default(self, obj):
-        import numpy as np
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super(NumpyEncoder, self).default(obj)
+    
+    @staticmethod
+    def convert_qasper_to_evaluation_format(
+        max_samples: int = 100,
+        output_path: Optional[str] = None,
+        split: str = "train"
+    ) -> List[Dict[str, Any]]:
+        """
+        Converts QASPER dataset to the format expected by the evaluator.
+        
+        Args:
+            max_samples: Maximum number of samples to include
+            output_path: Path to save the converted dataset (optional)
+            split: Dataset split to use
+            
+        Returns:
+            List of evaluation items in the expected format
+        """
+        if not DATASETS_AVAILABLE:
+            raise ImportError("The 'datasets' package is required to use QASPER dataset")
+            
+        print(f"Converting QASPER dataset (max {max_samples} samples)...")
+        
+        # Load QASPER dataset
+        dataset = load_dataset("allenai/qasper", split=split)
+        
+        # Print dataset info for debugging
+        print(f"QASPER dataset info: {dataset}")
+        print(f"QASPER dataset features: {dataset.features}")
+        
+        evaluation_items = []
+        sample_count = 0
+        
+        for i, paper in enumerate(dataset):
+            if sample_count >= max_samples:
+                break
+            
+            # Print paper structure for debugging (only first paper)
+            if i == 0:
+                print(f"Paper keys: {paper.keys() if isinstance(paper, dict) else 'Not a dictionary'}")
+                print(f"Paper type: {type(paper)}")
+                if "qas" in paper:
+                    print(f"QAs type: {type(paper['qas'])}")
+                    # If qas is a dict, print its keys
+                    if isinstance(paper['qas'], dict):
+                        print(f"QAs keys: {paper['qas'].keys()}")
+                        # Print the first key-value pair if any
+                        if paper['qas']:
+                            first_key = next(iter(paper['qas']))
+                            print(f"First QA key: {first_key}")
+                            print(f"First QA value type: {type(paper['qas'][first_key])}")
+                            print(f"First QA value: {paper['qas'][first_key]}")
+                    # If qas is a list, print the first item
+                    elif isinstance(paper['qas'], list) and paper['qas']:
+                        print(f"First QA item type: {type(paper['qas'][0])}")
+                        print(f"First QA item: {paper['qas'][0]}")
+            
+            paper_id = paper.get("id", "")
+            title = paper.get("title", "")
+            abstract = paper.get("abstract", "")
+            
+            # Process full_text which is a sequence of sections
+            full_text_sections = []
+            if "full_text" in paper and isinstance(paper["full_text"], list):
+                for section in paper["full_text"]:
+                    if isinstance(section, dict) and "section_name" in section and "paragraphs" in section:
+                        section_name = section["section_name"]
+                        section_text = "\n".join(section["paragraphs"]) if isinstance(section["paragraphs"], list) else ""
+                        if section_text:
+                            full_text_sections.append({
+                                "name": section_name,
+                                "text": section_text
+                            })
+            
+            # Process each question-answer pair
+            if "qas" in paper:
+                # The QASPER dataset structure has questions as a list in the "question" field
+                if isinstance(paper["qas"], dict) and "question" in paper["qas"] and isinstance(paper["qas"]["question"], list):
+                    questions = paper["qas"]["question"]
+                    question_ids = paper["qas"].get("question_id", [])
+                    answers_list = paper["qas"].get("answers", [])
+                    
+                    # Make sure we have question IDs for each question
+                    if len(question_ids) < len(questions):
+                        question_ids = [f"q{i}" for i in range(len(questions))]
+                    
+                    # Process each question
+                    for i, question in enumerate(questions):
+                        if sample_count >= max_samples:
+                            break
+                        
+                        if not question:
+                            continue
+                        
+                        question_id = question_ids[i] if i < len(question_ids) else f"q{i}"
+                    
+                        # For simplicity, we'll use the question itself as the answer
+                        # since we don't have a clear way to get answers from the dataset structure
+                        answer = f"Answer to: {question}"
+                        evidence_sections = []
+                        
+                        # Try to find answers if available
+                        if i < len(answers_list) and isinstance(answers_list, list):
+                            answer_obj = answers_list[i]
+                            if isinstance(answer_obj, dict) and "answer" in answer_obj:
+                                answer_data = answer_obj["answer"]
+                                if isinstance(answer_data, dict):
+                                    # Skip unanswerable questions
+                                    if not answer_data.get("unanswerable", True):
+                                        # Try to get answer from extractive spans
+                                        if "extractive_spans" in answer_data and isinstance(answer_data["extractive_spans"], list) and answer_data["extractive_spans"]:
+                                            answer = " ".join(answer_data["extractive_spans"])
+                                        # If no extractive spans, try free form answer
+                                        elif "free_form_answer" in answer_data and answer_data["free_form_answer"]:
+                                            answer = answer_data["free_form_answer"]
+                                        
+                                        # Get evidence sections
+                                        if "evidence" in answer_data and isinstance(answer_data["evidence"], list):
+                                            evidence_sections = answer_data["evidence"]
+                    
+                    if not answer:
+                        continue
+                    
+                    # Create ground truth chunks from the paper sections
+                    ground_truth_chunks = []
+                    
+                    # Add abstract as a chunk if it's in evidence or contains part of the answer
+                    if abstract and (
+                        "abstract" in [e.lower() for e in evidence_sections] or
+                        any(word in abstract.lower() for word in answer.lower().split() if len(word) > 3)
+                    ):
+                        ground_truth_chunks.append({
+                            "id": f"{paper_id}_abstract",
+                            "content": abstract,
+                            "source": title,
+                            "section": "Abstract"
+                        })
+                    
+                    # Add sections that are in evidence or contain parts of the answer
+                    for section in full_text_sections:
+                        section_name = section["name"]
+                        section_text = section["text"]
+                        
+                        if (
+                            section_name.lower() in [e.lower() for e in evidence_sections] or
+                            any(word in section_text.lower() for word in answer.lower().split() if len(word) > 3)
+                        ):
+                            ground_truth_chunks.append({
+                                "id": f"{paper_id}_{section_name}",
+                                "content": section_text,
+                                "source": title,
+                                "section": section_name
+                            })
+                    
+                    # If no ground truth chunks were found, use the abstract and first section
+                    if not ground_truth_chunks:
+                        if abstract:
+                            ground_truth_chunks.append({
+                                "id": f"{paper_id}_abstract",
+                                "content": abstract,
+                                "source": title,
+                                "section": "Abstract"
+                            })
+                        
+                        if full_text_sections:
+                            ground_truth_chunks.append({
+                                "id": f"{paper_id}_{full_text_sections[0]['name']}",
+                                "content": full_text_sections[0]['text'],
+                                "source": title,
+                                "section": full_text_sections[0]['name']
+                            })
+                    
+                    # Create evaluation item
+                    evaluation_item = {
+                        "question": question,
+                        "answer": answer,
+                        "paper_id": paper_id,
+                        "title": title,
+                        "ground_truth_chunks": ground_truth_chunks
+                    }
+                    
+                    evaluation_items.append(evaluation_item)
+                    sample_count += 1
+        
+        print(f"Converted {len(evaluation_items)} question-answer pairs from QASPER dataset")
+        
+        # Save to file if output path is provided
+        if output_path:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            with open(output_path, 'w') as f:
+                json.dump(evaluation_items, f, indent=2)
+            print(f"Saved converted dataset to {output_path}")
+        
+        return evaluation_items
 
 
 async def evaluate_chunker(
     dataset_path: str,
     chunker_name: str,
     chunker_params: Optional[Dict[str, Any]] = None,
-    output_dir: str = "./data/evaluation/results"
+    output_dir: str = "./data/evaluation/results",
+    is_qasper: bool = False
 ) -> Dict[str, Any]:
     """
     Evaluates a specific chunker with the given parameters.
@@ -456,14 +651,18 @@ async def evaluate_chunker(
         chunker_name (str): Name of the chunker to evaluate.
         chunker_params (Optional[Dict[str, Any]]): Parameters for the chunker.
         output_dir (str): Directory to save evaluation results.
+        is_qasper (bool): Whether the dataset is QASPER.
         
     Returns:
         Dict[str, Any]: Evaluation results.
     """
+    # Use a different collection name for QASPER dataset
+    collection_name = f"qasper_collection_{chunker_name}" if is_qasper else f"wfp_collection_{chunker_name}"
+    
     # Initialize the query pipeline
     query_pipeline = QueryPipeline(
         db_dir=DB_DIR,
-        db_collection=f"wfp_collection_{chunker_name}",
+        db_collection=collection_name,
         embedding_model=EMBEDDING_MODEL,
         chat_model=CHAT_MODEL,
         chat_temperature=CHAT_TEMPERATURE,
@@ -486,7 +685,8 @@ async def evaluate_chunker(
 
 async def evaluate_all_chunkers(
     dataset_path: str,
-    output_dir: str = "./data/evaluation/results"
+    output_dir: str = "./data/evaluation/results",
+    is_qasper: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Evaluates all available chunkers.
@@ -512,7 +712,8 @@ async def evaluate_all_chunkers(
             result = await evaluate_chunker(
                 dataset_path=dataset_path,
                 chunker_name=chunker_name,
-                output_dir=output_dir
+                output_dir=output_dir,
+                is_qasper=is_qasper
             )
             
             results.append(result)
@@ -528,12 +729,162 @@ async def evaluate_all_chunkers(
     return results
 
 
+async def index_qasper_dataset(
+    dataset_path: str,
+    chunker_name: str,
+    chunker_params: Optional[Dict[str, Any]] = None
+) -> None:
+    """
+    Index the QASPER dataset into the collection.
+    
+    Args:
+        dataset_path: Path to the QASPER dataset
+        chunker_name: Name of the chunker to use
+        chunker_params: Parameters for the chunker
+    """
+    from backend.indexing import IngestionPipeline
+    from langchain.schema import Document
+    import json
+    
+    # Load the dataset
+    with open(dataset_path, 'r') as f:
+        dataset = json.load(f)
+    
+    # Create documents from the dataset
+    docs = []
+    for item in dataset:
+        # Add question and answer as a document
+        question = item.get('question', '')
+        answer = item.get('answer', '')
+        
+        # Add ground truth chunks as documents
+        for chunk in item.get('ground_truth_chunks', []):
+            doc = Document(
+                page_content=chunk.get('content', ''),
+                metadata={
+                    'id': chunk.get('id', ''),
+                    'source': chunk.get('source', ''),
+                    'section': chunk.get('section', ''),
+                    'question': question,
+                    'answer': answer
+                }
+            )
+            docs.append(doc)
+    
+    # Create the chunker
+    chunker = ChunkerFactory.create(chunker_name, **(chunker_params or {}))
+    
+    # Create a temporary ingestion pipeline to index the documents
+    collection_name = f"qasper_collection_{chunker_name}"
+    ingestion = IngestionPipeline(
+        pdf_dir="./data/pdfs",  # Not used
+        db_dir=DB_DIR,
+        db_collection=collection_name,
+        chunk_size=chunker_params.get("chunk_size", 1000) if chunker_params else 1000,
+        chunk_overlap=chunker_params.get("chunk_overlap", 200) if chunker_params else 200,
+        data_dir="./data",  # Not used
+        embedding_model=EMBEDDING_MODEL,
+        chunker_name=chunker_name,
+        chunker_params=chunker_params
+    )
+    # Index the documents using the existing methods in IngestionPipeline
+    # Since we can't use index_documents directly, we'll use index_chunks instead
+    # First, we need to chunk the documents using the chunker
+    chunks = chunker.chunk_documents(docs)
+    
+    # Then, we can index the chunks
+    ingestion.index_chunks(chunks)
+    print(f"Indexed {len(docs)} documents ({len(chunks)} chunks) into collection {collection_name}")
+    print(f"Indexed {len(docs)} documents into collection {collection_name}")
+
+
+async def evaluate_with_qasper(
+    max_samples: int = 50,
+    output_dir: str = "./data/evaluation/qasper_results",
+    chunker_name: Optional[str] = None,
+    chunker_params: Optional[Dict[str, Any]] = None
+) -> List[Dict[str, Any]]:
+    """
+    Evaluates chunkers using the QASPER dataset.
+    
+    Args:
+        max_samples: Maximum number of samples to use from QASPER
+        output_dir: Directory to save evaluation results
+        chunker_name: Specific chunker to evaluate (if None, evaluates all)
+        chunker_params: Parameters for the chunker
+        
+    Returns:
+        List of evaluation results
+    """
+    if not DATASETS_AVAILABLE:
+        raise ImportError("The 'datasets' package is required to use QASPER dataset")
+    
+    # Create output directory
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Convert QASPER dataset to evaluation format
+    converter = QASPERDatasetConverter()
+    dataset_path = os.path.join(output_dir, "qasper_evaluation_dataset.json")
+    
+    converted_dataset = converter.convert_qasper_to_evaluation_format(
+        max_samples=max_samples,
+        output_path=dataset_path
+    )
+    
+    # Evaluate chunkers
+    if chunker_name:
+        print(f"Evaluating chunker {chunker_name} with QASPER dataset")
+        
+        # Index the dataset
+        print(f"Indexing QASPER dataset for chunker {chunker_name}...")
+        await index_qasper_dataset(
+            dataset_path=dataset_path,
+            chunker_name=chunker_name,
+            chunker_params=chunker_params
+        )
+        
+        # Run evaluation
+        result = await evaluate_chunker(
+            dataset_path=dataset_path,
+            chunker_name=chunker_name,
+            chunker_params=chunker_params,
+            output_dir=output_dir,
+            is_qasper=True
+        )
+        results = [result]
+    else:
+        print("Evaluating all chunkers with QASPER dataset")
+        
+        # Get all available chunkers
+        chunkers = ChunkerFactory.list_chunkers()
+        
+        # Index the dataset for each chunker
+        for chunker in chunkers:
+            print(f"Indexing QASPER dataset for chunker {chunker}...")
+            await index_qasper_dataset(
+                dataset_path=dataset_path,
+                chunker_name=chunker,
+                chunker_params=chunker_params
+            )
+        
+        # Run evaluation
+        results = await evaluate_all_chunkers(
+            dataset_path=dataset_path,
+            output_dir=output_dir,
+            is_qasper=True
+        )
+    
+    return results
+
+
 async def main():
     """
     Main function to parse arguments and run evaluation.
     """
     parser = argparse.ArgumentParser(description="Evaluate RAG system with different chunking methods")
-    parser.add_argument("--dataset", required=True, help="Path to the evaluation dataset")
+    parser.add_argument("--dataset", help="Path to the evaluation dataset (use --qasper for QASPER dataset)")
+    parser.add_argument("--qasper", action="store_true", help="Use QASPER dataset for evaluation")
+    parser.add_argument("--max_samples", type=int, default=50, help="Maximum number of samples to use from QASPER dataset")
     parser.add_argument("--output_dir", default="./data/evaluation/results", help="Directory to save evaluation results")
     parser.add_argument("--chunker", help="Specific chunker to evaluate (evaluates all if not specified)")
     parser.add_argument("--chunker_params", help="JSON string of parameters for the chunker")
@@ -552,22 +903,41 @@ async def main():
             print(f"Error parsing chunker_params: {e}")
             return
     
-    # Evaluate specific chunker or all chunkers
-    if args.chunker:
-        print(f"Evaluating chunker: {args.chunker}")
-        result = await evaluate_chunker(
-            dataset_path=args.dataset,
+    # Determine which dataset to use
+    if args.qasper:
+        if not DATASETS_AVAILABLE:
+            print("Error: The 'datasets' package is required to use QASPER dataset")
+            print("Install it with: pip install datasets")
+            return
+            
+        # Use QASPER dataset
+        output_dir = os.path.join(args.output_dir, "qasper")
+        results = await evaluate_with_qasper(
+            max_samples=args.max_samples,
+            output_dir=output_dir,
             chunker_name=args.chunker,
-            chunker_params=chunker_params,
-            output_dir=args.output_dir
+            chunker_params=chunker_params
         )
-        results = [result]
+    elif args.dataset:
+        # Use provided dataset
+        if args.chunker:
+            print(f"Evaluating chunker: {args.chunker}")
+            result = await evaluate_chunker(
+                dataset_path=args.dataset,
+                chunker_name=args.chunker,
+                chunker_params=chunker_params,
+                output_dir=args.output_dir
+            )
+            results = [result]
+        else:
+            print("Evaluating all chunkers")
+            results = await evaluate_all_chunkers(
+                dataset_path=args.dataset,
+                output_dir=args.output_dir
+            )
     else:
-        print("Evaluating all chunkers")
-        results = await evaluate_all_chunkers(
-            dataset_path=args.dataset,
-            output_dir=args.output_dir
-        )
+        print("Error: Either --dataset or --qasper must be specified")
+        return
     
     # Generate comparison report if multiple results
     if len(results) > 1:

@@ -38,3 +38,15 @@ plotly>=5.15.0
 # Utilities
 tqdm>=4.65.0
 requests>=2.31.0
+
+# For downloading QASPER via HuggingFace
+datasets>=3.4.0
+
+# Jupyter notebooks
+jupyter>=1.0.0
+ipywidgets>=8.0.0
+
+# Required for notebooks/qasper_dataset_analysis.ipynb for progress bar
+ipywidgets==8.1.5
+widgetsnbextension==4.0.13
+jupyterlab_widgets==3.0.13

@@ -179,3 +179,7 @@ data/
 # - extract document titles - to download specific evaluation reports that are used for creating evaluation test set
 # - modify json metadata - filter out only needed metadata
 scripts/data_preparation
+
+brisi.txt
+backend/chunkers/brisi.md
+chunking_improvements_plan.md

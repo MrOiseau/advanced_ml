@@ -242,6 +242,115 @@ class IngestionPipeline:
         except Exception as e:
             logger.error(f"Error saving data to JSON: {e}")
 
+    def index_documents(self, docs: List[Document]) -> None:
+        """
+        Index documents directly without chunking.
+        
+        Args:
+            docs (List[Document]): List of Document objects to index.
+        """
+        try:
+            logger.info(f"Indexing {len(docs)} documents directly.")
+            
+            # Measure indexing time
+            start_time = time.time()
+            
+            # Check if we should use a local embedding model (faster for development)
+            use_local_embeddings = os.getenv("USE_LOCAL_EMBEDDINGS", "false").lower() == "true"
+            
+            if use_local_embeddings:
+                # Use HuggingFace embeddings for local processing (no API calls)
+                try:
+                    from langchain_community.embeddings import HuggingFaceEmbeddings
+                    logger.info("Using local HuggingFace embeddings model")
+                    embeddings = HuggingFaceEmbeddings(
+                        model_name="BAAI/bge-small-en-v1.5"
+                    )
+                except ImportError:
+                    logger.warning("HuggingFaceEmbeddings not available, falling back to OpenAI")
+                    embeddings = OpenAIEmbeddings(
+                        model=EMBEDDING_MODEL,
+                        openai_api_key=os.getenv("OPENAI_API_KEY"),
+                        disallowed_special=(),
+                        chunk_size=20  # Process 20 documents at a time
+                    )
+            else:
+                # Use OpenAI embeddings with batch processing
+                logger.info(f"Using OpenAI embeddings model: {EMBEDDING_MODEL}")
+                embeddings = OpenAIEmbeddings(
+                    model=EMBEDDING_MODEL,
+                    openai_api_key=os.getenv("OPENAI_API_KEY"),
+                    disallowed_special=(),
+                    chunk_size=20  # Process 20 documents at a time
+                )
+            
+            # Process in batches for better performance
+            batch_size = 20  # Adjust based on your needs
+            total_batches = (len(docs) - 1) // batch_size + 1
+            
+            logger.info(f"Processing in {total_batches} batches of size {batch_size}")
+            
+            # Initialize Chroma client
+            chroma_client = chromadb.PersistentClient(path=self.db_dir)
+            
+            # Get or create collection
+            collection_name = self.db_collection
+            
+            # Use LangChain's Chroma with batching
+            vector_store = Chroma(
+                persist_directory=self.db_dir,
+                collection_name=collection_name,
+                embedding_function=embeddings,
+            )
+            
+            # Filter complex metadata from documents
+            filtered_docs = []
+            for doc in docs:
+                # Create a copy of the document
+                filtered_doc = Document(
+                    page_content=doc.page_content,
+                    metadata={}
+                )
+                
+                # Filter metadata to only include simple types
+                for key, value in doc.metadata.items():
+                    # Skip lists and other complex types
+                    if isinstance(value, (str, int, float, bool)):
+                        filtered_doc.metadata[key] = value
+                    elif key == "heading_path" and isinstance(value, list):
+                        # Skip the list but keep the string version
+                        continue
+                
+                filtered_docs.append(filtered_doc)
+            
+            logger.info(f"Filtered complex metadata from {len(docs)} documents")
+            
+            # Process in batches
+            for i in range(0, len(filtered_docs), batch_size):
+                batch = filtered_docs[i:i+batch_size]
+                batch_num = i // batch_size + 1
+                
+                logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch)} documents)")
+                
+                try:
+                    # Add documents in batch
+                    vector_store.add_documents(documents=batch)
+                    logger.info(f"Completed batch {batch_num}/{total_batches}")
+                except Exception as e:
+                    logger.error(f"Error processing batch {batch_num}: {e}")
+                    # Continue with next batch instead of failing completely
+                    continue
+            
+            # Calculate indexing time
+            indexing_time = time.time() - start_time
+            self.performance_metrics["indexing_time"] = indexing_time
+            
+            # Chroma automatically persists the data with PersistentClient
+            logger.info(f"Indexing completed and persisted to: {self.db_dir}")
+            logger.info(f"Indexing time: {indexing_time:.2f} seconds")
+        except Exception as e:
+            logger.error(f"Error during indexing: {e}")
+    
     def index_chunks(self, chunks: List[Document]) -> None:
         """
         Index the document chunks using ChromaDB with the specified embedding model.
@@ -265,7 +374,7 @@ class IngestionPipeline:
                     from langchain_community.embeddings import HuggingFaceEmbeddings
                     logger.info("Using local HuggingFace embeddings model")
                     embeddings = HuggingFaceEmbeddings(
-                        model_name="sentence-transformers/all-MiniLM-L6-v2"
+                        model_name="BAAI/bge-small-en-v1.5"
                     )
                 except ImportError:
                     logger.warning("HuggingFaceEmbeddings not available, falling back to OpenAI")
@@ -372,7 +481,7 @@ class IngestionPipeline:
                     from langchain_community.embeddings import HuggingFaceEmbeddings
                     logger.info("Using local HuggingFace embeddings model for verification")
                     embeddings = HuggingFaceEmbeddings(
-                        model_name="sentence-transformers/all-MiniLM-L6-v2"
+                        model_name="BAAI/bge-small-en-v1.5"
                     )
                 except ImportError:
                     logger.warning("HuggingFaceEmbeddings not available, falling back to OpenAI")

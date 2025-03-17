@@ -18,7 +18,7 @@ from backend.querying import QueryPipeline
 from backend.evaluation.evaluator import RAGEvaluator
 from backend.evaluation.visualizer import ResultsVisualizer
 from backend.experiments.config import ExperimentConfig
-from backend.experiments.results import NumpyEncoder
+from backend.utils import NumpyEncoder
 
 
 class ExperimentRunner:

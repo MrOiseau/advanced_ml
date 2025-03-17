@@ -21,7 +21,7 @@ class RecursiveCharacterChunker(BaseChunker):
     
     def __init__(
         self,
-        chunk_size: int = 1000,
+        max_chunk_size: int = 1000,
         chunk_overlap: int = 200,
         separators: Optional[List[str]] = None,
         **kwargs
@@ -30,14 +30,14 @@ class RecursiveCharacterChunker(BaseChunker):
         Initialize the RecursiveCharacterChunker.
         
         Args:
-            chunk_size (int): The target size of each chunk in characters.
+            max_chunk_size (int): The target size of each chunk in characters.
             chunk_overlap (int): The number of characters to overlap between chunks.
             separators (Optional[List[str]]): List of separators to use for splitting.
                 If None, a default list will be used.
             **kwargs: Additional arguments to pass to the parent class.
         """
         super().__init__(
-            chunk_size=chunk_size,
+            max_chunk_size=max_chunk_size,
             chunk_overlap=chunk_overlap,
             separators=separators,
             **kwargs
@@ -46,17 +46,17 @@ class RecursiveCharacterChunker(BaseChunker):
         # Default separators if none provided
         if separators is None:
             separators = [
-                ".\n\n", ".\n", ". ", "!\n\n", "!\n", "? ",
-                "\n\n", "\n", " - ", ": ", "; ", ", ", " "
+                ".\n\n", ".\n", "!\n\n", "!\n", "! ", "? ",
+                "\n\n", "\n", ". ", " ", ""
             ]
         
-        self.chunk_size = chunk_size
+        self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
         self.separators = separators
         
         # Initialize the text splitter
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=self.chunk_size,
+            chunk_size=self.max_chunk_size,  # LangChain uses chunk_size parameter
             chunk_overlap=self.chunk_overlap,
             separators=self.separators,
         )
